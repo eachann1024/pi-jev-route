@@ -1,0 +1,32 @@
+{
+  "name": "@each1024/pi-jev-route",
+  "version": "0.9.0",
+  "description": "Automatic Jev model selection at Pi subagent dispatch, with scoped model descriptions and a local HTML audit console.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eachann1024/pi-jev-route.git"
+  },
+  "homepage": "https://github.com/eachann1024/pi-jev-route",
+  "bugs": {
+    "url": "https://github.com/eachann1024/pi-jev-route/issues"
+  },
+  "type": "module",
+  "license": "MIT",
+  "author": "eachann1024",
+  "keywords": ["pi-package", "pi-extension", "jev", "subagents", "model-routing"],
+  "pi": { "extensions": ["./index.ts"] },
+  "files": ["index.ts", "lib", "web", "README.md", "README.zh-CN.md", "LICENSE"],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node test/core.mjs && node test/integration.mjs",
+    "prepublishOnly": "npm run check && npm test"
+  },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": ">=0.85.1" },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "@types/node": "^26.4.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": { "node": ">=22.18.0" },
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org" }
+}
