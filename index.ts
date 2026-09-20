@@ -2,12 +2,15 @@ import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { getAgentDir, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { getAgentDir, type CustomEntry, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
 import { defaultModelDescription, ROUTING_PROMPT } from "./lib/describe.ts";
 import { DEFAULTS, openStore, parseSettings, type RouteLog, type Settings } from "./lib/store.ts";
 import { routeTask, type Candidate } from "./lib/router.ts";
 
 const COVERAGE = "自动覆盖模型发起的结构化 subagent 单任务（含 async）。workflow、/run、定时任务、其他扩展直接派发和子代理内部派发不保证覆盖；未覆盖的工具工作流会记为跳过。";
+const PLUGIN = "pi-jev-route";
+type Badge = { text: string };
 const clean = (value: unknown, max = 256) => typeof value === "string" ? value.replace(/[\u0000-\u001f]/g, " ").slice(0, max) : "";
 const modelId = (model: { provider: string; id: string }) => `${model.provider}/${model.id}`;
 
@@ -24,7 +27,24 @@ export function scopedCandidates(ctx: ExtensionContext, settings: Settings) {
   });
 }
 
+function badgeText(record: RouteLog) {
+  const model = record.requestedModel ? ` ${record.requestedModel}` : "";
+  return `${record.agent} · ${record.outcome}${model}`;
+}
+function mark(pi: ExtensionAPI, ctx: ExtensionContext | undefined, record: RouteLog) {
+  if (!ctx || ctx.mode !== "tui" || record.outcome === "skipped") return;
+  try { pi.appendEntry<Badge>(PLUGIN, { text: badgeText(record) }); }
+  catch { /* 会话条目失败不影响派发 */ }
+}
+function status(ctx: ExtensionContext | undefined, text?: string) {
+  try { ctx?.ui.setStatus(PLUGIN, text); } catch { /* 页脚状态是提示，不是门禁 */ }
+}
+
 export default function jevRoute(pi: ExtensionAPI) {
+  pi.registerEntryRenderer<Badge>(PLUGIN, (entry: CustomEntry<Badge>, _, theme) => {
+    const detail = entry.data?.text ? ` ${entry.data.text}` : "";
+    return new Text(theme.fg("accent", PLUGIN) + theme.fg("dim", detail), 0, 0);
+  });
   let store: ReturnType<typeof openStore> | undefined;
   let context: ExtensionContext | undefined;
   let settingsError = "", keyAvailable = false;
@@ -80,7 +100,7 @@ export default function jevRoute(pi: ExtensionAPI) {
     const record: RouteLog = { id, at: new Date().toISOString(), sessionId: ctx.sessionManager.getSessionId(),
       toolCallId: event.toolCallId, agent, taskHash: createHash("sha256").update(task).digest("hex").slice(0, 16),
       outcome: "skipped", requestedModel: clean(input.model), reason: "", note: "" };
-    const log = () => { ensureStore().addLog(record); pending.set(event.toolCallId, id); };
+    const log = () => { ensureStore().addLog(record); pending.set(event.toolCallId, id); mark(pi, ctx, record); };
     try {
       if (["workflow", "workflowScript", "workflowScriptPath", "tasks", "chain", "parallel"].some(key => input[key] !== undefined) || input.machine !== undefined) {
         record.reason = "此工作流或远程派发不在当前拦截范围，参数未修改"; log(); return;
@@ -103,6 +123,7 @@ export default function jevRoute(pi: ExtensionAPI) {
       }
       const operation = lifetime;
       const signal = AbortSignal.any([operation.signal, ...(ctx.signal ? [ctx.signal] : [])]);
+      status(ctx, PLUGIN);
       const models = scopedCandidates(ctx, config);
       const parent = ctx.model ? ctx.modelRegistry.getAvailable().find(model => modelId(model) === modelId(ctx.model!)) : undefined;
       const main: Candidate | undefined = parent ? { id: modelId(parent), name: parent.name, reasoning: parent.reasoning, enabled: true, description: "当前主会话模型" } : undefined;
@@ -122,8 +143,8 @@ export default function jevRoute(pi: ExtensionAPI) {
       log(); // Persist the decision before allowing execution; no unlogged automatic dispatch.
       input.model = record.requestedModel;
     } catch {
-      return { block: true, reason: "Jev 派发已取消或无法安全记录判定；子代理未启动，请检查 /jev-route status。" };
-    }
+      return { block: true, reason: "Jev 派发已取消或无法安全记录判定；子代理未启动，请检查 /pi-jev-route status。" };
+    } finally { status(ctx); }
   });
 
   pi.on("tool_result", (event) => {
@@ -151,9 +172,9 @@ export default function jevRoute(pi: ExtensionAPI) {
     } catch { context?.ui.notify("Jev 无法更新执行报告，已保留原判定日志。", "warning"); }
   });
 
-  pi.registerCommand("jev-route", {
-    description: "打开 Jev 子代理路由设置与日志；或 on / off / status",
-    handler: async (args, ctx) => {
+  const command = {
+    description: "打开 Pi Jev Route 设置与日志；或 on / off / status",
+    handler: async (args: string, ctx: ExtensionContext) => {
       context = ctx;
       const action = args.trim() || "settings";
       if (action === "status") {
@@ -164,7 +185,7 @@ export default function jevRoute(pi: ExtensionAPI) {
         catch { ctx.ui.notify("设置未保存，原文件未覆盖。", "error"); }
         return;
       }
-      if (action !== "settings") { ctx.ui.notify("用法：/jev-route [settings|on|off|status]；不再提供主会话 auto/shadow 模式。", "info"); return; }
+      if (action !== "settings") { ctx.ui.notify("用法：/pi-jev-route [settings|on|off|status]；不再提供主会话 auto/shadow 模式。", "info"); return; }
       if (ctx.mode !== "tui") { ctx.ui.notify("请在本机交互式 Pi 中打开 HTML 设置。", "warning"); return; }
       try {
         ensureStore();
@@ -186,5 +207,7 @@ export default function jevRoute(pi: ExtensionAPI) {
         if (result.code !== 0) ctx.ui.notify(`请在本机打开：${url}`, "info");
       } catch { ctx.ui.notify("无法打开路由设置，请检查文件权限。", "error"); }
     },
-  });
+  };
+  pi.registerCommand("pi-jev-route", command);
+  pi.registerCommand("jev-route", command);
 }

@@ -7,7 +7,7 @@ pi install npm:pi-subagents@0.69.0
 pi install npm:@each1024/pi-jev-route
 ```
 
-已经装有 `pi-subagents` 无需重复安装。已核对 Pi 0.85.1、pi-subagents 0.69.0；要求 Node ≥22.18，实际检查环境为 22.22.3。在 Pi 执行 `/reload`，再执行 `/jev-route` 打开 HTML 设置。
+已经装有 `pi-subagents` 无需重复安装。已核对 Pi 0.85.1、pi-subagents 0.69.0；要求 Node ≥22.18，实际检查环境为 22.22.3。在 Pi 执行 `/reload` 即可，插件默认开启。选型时会话会显示 `pi-jev-route` 标识；需要改选项或看日志时再执行 `/pi-jev-route`。
 
 ## 工作方式
 
@@ -26,10 +26,10 @@ pi install npm:@each1024/pi-jev-route
 判定日志支持手工备注，并区分：**选型结果、执行器报告配置、运行状态**。报告配置不等于独立验证了服务商实际响应模型。后台已受理不等于完成；没有证据就显示未报告。
 
 ```text
-/jev-route          打开 HTML 设置和日志
-/jev-route status   查看状态与覆盖范围
-/jev-route on       开启子代理路由
-/jev-route off      关闭子代理路由，不改当前模型
+/pi-jev-route          打开 HTML 设置和日志
+/pi-jev-route status   查看状态与覆盖范围
+/pi-jev-route on       开启子代理路由
+/pi-jev-route off      关闭子代理路由，不改当前模型
 ```
 
 页面只在执行命令时启动，监听 `127.0.0.1` 随机端口，使用随机令牌，五分钟闲置或切换会话后关闭。不加载外部脚本、字体和资源。并发编辑出现版本冲突会拒绝覆盖。远程或无界面运行不会自动创建公网服务或隧道。

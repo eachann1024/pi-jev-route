@@ -24,13 +24,14 @@ const response = () => ({ ok: true, json: async () => ({ answers: {
 const fakeFetch = async (_, options) => { calls++; captured = JSON.parse(options.body); return response(); };
 globalThis.fetch = fakeFetch;
 let ui, db;
-const hooks = new Map(), commands = new Map(), notices = [];
+const hooks = new Map(), commands = new Map(), notices = [], entries = [];
 const ctx = { mode: 'tui', model: main, scopedModels: [{ model: low }, { model: main }],
   modelRegistry: { getAvailable: () => [low, main, other] },
   sessionManager: { getSessionId: () => 'fixture-session' },
   ui: { notify: message => notices.push(message) }, signal: undefined,
 };
 const pi = { on: (event, handler) => hooks.set(event, handler), registerCommand: (name, command) => commands.set(name, command),
+  registerEntryRenderer: () => {}, appendEntry: (...entry) => entries.push(entry),
   getAllTools: () => [{ name: 'subagent' }], setModel: () => { throw Error('Must never change parent model'); },
   setThinkingLevel: () => { throw Error('Must never change parent thinking'); },
 };
@@ -64,6 +65,7 @@ try {
   const run = event({ agent: 'worker', task: 'Implement a bounded formatter without changing permissions.', async: true, toolBudget: { hard: 3 } });
   assert.equal(await emit('tool_call', run), undefined);
   assert.equal(run.input.model, 'fixture/low:low'); assert.equal(calls, 1);
+  assert.equal(entries[0][0], 'pi-jev-route');
   assert.deepEqual(run.input.toolBudget, { hard: 3 }); assert.equal(ctx.model, main);
   assert(!JSON.stringify(db.getLogs()).includes(run.input.task));
   assert(!JSON.stringify(db.getLogs()).includes('test-only-credential'));
@@ -119,6 +121,7 @@ try {
   const html = await readFile(new URL('../web/index.html', import.meta.url), 'utf8');
   const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1]; assert(script);
   assert.match(html, /id="model-search"/);
+  assert.match(html, /设置（默认收起/);
   assert.match(html, /写何时选用/);
   const jsPath = join(root, 'ui.js'); await writeFile(jsPath, script);
   const checked = spawnSync(process.execPath, ['--check', jsPath], { encoding: 'utf8' }); assert.equal(checked.status, 0, checked.stderr);

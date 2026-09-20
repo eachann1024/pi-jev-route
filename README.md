@@ -7,7 +7,7 @@ pi install npm:pi-subagents@0.69.0
 pi install npm:@each1024/pi-jev-route
 ```
 
-Already using `pi-subagents`? Keep your installation. Tested with Pi **0.85.1**, pi-subagents **0.69.0**, and Node **22.22.3**. Requires Node **22.18+**. Run `/reload`, then `/jev-route` to open settings. [中文说明](README.zh-CN.md)
+Already using `pi-subagents`? Keep your installation. Tested with Pi **0.85.1**, pi-subagents **0.69.0**, and Node **22.22.3**. Requires Node **22.18+**. Run `/reload`. Routing is on by default; the session shows a `pi-jev-route` mark when it selects a model. Open `/pi-jev-route` only for settings and logs. [中文说明](README.zh-CN.md)
 
 ## How it works
 
@@ -22,7 +22,7 @@ The agent receives concise coordination guidance, not a replacement launcher. No
 
 ## Local HTML console
 
-`/jev-route` opens a loopback-only, token-protected settings page with:
+`/pi-jev-route` opens a loopback-only, token-protected settings page. Settings start collapsed:
 
 - Automatically discovered scoped models with search; an empty Pi scope means all authenticated available models.
 - Per-model enablement and editable descriptions used in Jev's decision. Empty descriptions are prefilled for common lightweight (flash) and strong (gpt 6, grok, opus, …) families; the field placeholder shows how to write them.
@@ -32,10 +32,10 @@ The agent receives concise coordination guidance, not a replacement launcher. No
 Descriptions for temporarily unavailable or out-of-scope models are retained. A scope or settings change during classification blocks that attempt instead of applying an obsolete decision. Concurrent settings or note edits are rejected rather than silently overwritten.
 
 ```text
-/jev-route          Open HTML settings and logs
-/jev-route status   Show enabled state and coverage
-/jev-route on       Enable child routing
-/jev-route off      Disable child routing; keep all current models
+/pi-jev-route          Open HTML settings and logs
+/pi-jev-route status   Show enabled state and coverage
+/pi-jev-route on       Enable child routing
+/pi-jev-route off      Disable child routing; keep all current models
 ```
 
 The server is started only on demand, binds to `127.0.0.1`, and closes after five idle minutes or a session transition. No external scripts, fonts, or assets are loaded. On remote/headless Pi, the HTML command must be opened in a local interactive session; no public listener or tunnel is created.
@@ -67,7 +67,7 @@ Async acceptance is recorded as **accepted**, not completion. Foreground executo
 
 ## Migration and development
 
-This package replaces the earlier local experiment that offered main-session `auto`/`shadow` routing. Remove that old extension from Pi's discovery directory before installing this package; do not load both under `/jev-route`. It does not replace or modify Pi Jev Reply, which independently reviews completed replies.
+This package replaces the earlier local experiment that offered main-session `auto`/`shadow` routing. Remove that old extension from Pi's discovery directory before installing this package; do not load both under `/pi-jev-route`. It does not replace or modify Pi Jev Reply, which independently reviews completed replies.
 
 ```sh
 npm ci --ignore-scripts
