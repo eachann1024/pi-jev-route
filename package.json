@@ -1,6 +1,6 @@
 {
   "name": "@each1024/pi-jev-route",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Automatic Jev model selection at Pi subagent dispatch, with scoped model descriptions and a local HTML audit console.",
   "repository": {
     "type": "git",

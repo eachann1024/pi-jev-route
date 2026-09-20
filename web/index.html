@@ -6,35 +6,45 @@
 <meta name="referrer" content="no-referrer">
 <title>Pi Jev Route</title>
 <style>
-:root{color-scheme:light;--background:#fff;--foreground:#242424;--primary:#292929;--secondary:#f5f5f5;--muted:#626262;--accent:#ededed;--destructive:#a12727;--border:#d9d9d9;--control-border:#858585;--ring:#454545;--text-sm:.875rem;--text-base:1rem;--text-lg:1.25rem;--text-xl:1.75rem;--radius-sm:4px;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px}
-*{box-sizing:border-box}body{margin:0;background:var(--background);color:var(--foreground);font:var(--text-base)/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1200px;margin:auto;padding:var(--space-8) var(--space-6) 64px}header,.actions{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}h1{font-size:var(--text-xl);font-weight:600;margin:0}h2{font-size:var(--text-lg);font-weight:600;margin:0 0 var(--space-6)}p{margin:var(--space-2) 0}.muted,dt,.hint{color:var(--muted);font-size:var(--text-sm)}nav{display:flex;gap:var(--space-6);border-bottom:1px solid var(--border);padding:var(--space-6) 0 var(--space-3)}a{color:var(--foreground);text-underline-offset:4px}section{padding-top:var(--space-8)}button,input,select,textarea{font:inherit;color:inherit}button{background:var(--background);border:1px solid var(--control-border);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-4);cursor:pointer;min-height:36px}button:hover{background:var(--secondary)}button:disabled{opacity:.5;cursor:not-allowed}.primary{background:var(--primary);color:var(--background)}.primary:hover{background:var(--foreground)}:focus-visible{outline:2px solid var(--ring);outline-offset:3px}fieldset{border:0;padding:0;margin:0;min-width:0}label{display:block;font-size:var(--text-sm);margin-bottom:var(--space-2)}.check{display:flex;align-items:center;gap:var(--space-2);min-height:32px}.check input{width:20px;height:20px;accent-color:var(--primary);margin:0}input[type=search],input[type=number],select,textarea{width:100%;border:1px solid var(--control-border);border-radius:var(--radius-sm);background:var(--background);padding:var(--space-2);font-size:var(--text-sm)}textarea{resize:vertical;min-height:72px}textarea::placeholder,input::placeholder{color:var(--muted)}.field{margin:var(--space-6) 0;max-width:640px}dl{display:flex;flex-wrap:wrap;gap:var(--space-6);margin:var(--space-4) 0 var(--space-6)}dl div{min-width:160px}dd{margin:var(--space-1) 0 0;overflow-wrap:anywhere}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:var(--text-sm);text-align:left}th{font-weight:500;color:var(--muted);background:var(--secondary)}th,td{padding:var(--space-3);border-bottom:1px solid var(--border);vertical-align:top}#models-table{min-width:640px}#models-table td:last-child{width:55%}#logs-table{min-width:1120px}#logs-table td{min-width:100px;max-width:240px;overflow-wrap:anywhere}#logs-table td:last-child{min-width:240px}code{font-size:var(--text-sm);overflow-wrap:anywhere}details{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:var(--space-4) 0;margin:var(--space-6) 0}summary{cursor:pointer;min-height:24px}.status{min-height:24px;margin:var(--space-4) 0;font-size:var(--text-sm)}.error{color:var(--destructive)}.note-status{font-size:var(--text-sm);margin-top:var(--space-2)}#coverage{white-space:pre-wrap;overflow-wrap:anywhere}#logs{border-top:1px solid var(--border);margin-top:var(--space-8)}[hidden]{display:none!important}@media(max-width:600px){main{padding:var(--space-6) var(--space-4)}dl{gap:var(--space-4)}h1{font-size:var(--text-lg)}}
+:root{color-scheme:light;--background:#fff;--foreground:#242424;--primary:#292929;--secondary:#f5f5f5;--muted:#626262;--destructive:#a12727;--border:#d9d9d9;--control-border:#858585;--ring:#454545;--text-sm:.875rem;--text-base:1rem;--text-lg:1.25rem;--radius-sm:4px;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px}
+*{box-sizing:border-box}body{margin:0;background:var(--background);color:var(--foreground);font:var(--text-base)/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:960px;margin:auto;padding:var(--space-8) var(--space-6) 64px}header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}h1{font-size:var(--text-lg);font-weight:600;margin:0}h2{font-size:var(--text-base);font-weight:600;margin:0 0 var(--space-4)}p{margin:var(--space-2) 0}.muted,.hint{color:var(--muted);font-size:var(--text-sm)}section{padding-top:var(--space-8)}button,input,select,textarea{font:inherit;color:inherit}button{background:var(--background);border:1px solid var(--control-border);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-4);cursor:pointer;min-height:36px}button:hover{background:var(--secondary)}button:disabled{opacity:.5;cursor:not-allowed}:focus-visible{outline:2px solid var(--ring);outline-offset:3px}fieldset{border:0;padding:0;margin:0;min-width:0}label{display:block;font-size:var(--text-sm);margin-bottom:var(--space-2)}.check{display:flex;align-items:center;gap:var(--space-2);min-height:32px}.check input{width:20px;height:20px;accent-color:var(--primary);margin:0}input[type=number],select,textarea{width:100%;border:1px solid var(--control-border);border-radius:var(--radius-sm);background:var(--background);padding:var(--space-2);font-size:var(--text-sm)}textarea{resize:vertical;min-height:64px}textarea::placeholder{color:var(--muted)}.field{margin:var(--space-4) 0;max-width:480px}#locale{width:auto;min-width:120px}.tools{display:flex;align-items:center;gap:var(--space-3)}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:var(--text-sm);text-align:left}th{font-weight:500;color:var(--muted);background:var(--secondary)}th,td{padding:var(--space-3);border-bottom:1px solid var(--border);vertical-align:top}#models-table{min-width:560px}#models-table td:last-child{width:55%}#logs-table{min-width:880px}#logs-table td{min-width:88px;max-width:220px;overflow-wrap:anywhere}details{border-top:1px solid var(--border);padding:var(--space-4) 0;margin:var(--space-4) 0}summary{cursor:pointer;min-height:24px}.status{min-height:24px;margin:var(--space-3) 0;font-size:var(--text-sm)}.error{color:var(--destructive)}#logs{border-top:1px solid var(--border);margin-top:var(--space-8)}[hidden]{display:none!important}@media(max-width:600px){main{padding:var(--space-6) var(--space-4)}h1{font-size:var(--text-base)}}
 </style>
 </head>
 <body>
 <main>
-<header><div><h1>Pi Jev Route</h1><p class="muted">主会话固定 · 派发前选型</p></div><button id="refresh" type="button">刷新</button></header>
-<nav aria-label="页面区域"><a href="#rules">模型与规则</a><a href="#logs">判定日志</a></nav>
+<header>
+  <h1>Pi Jev Route</h1>
+  <div class="tools">
+    <label for="locale" id="locale-label">语言</label>
+    <select id="locale"><option value="zh">中文</option><option value="en">English</option></select>
+    <button id="refresh" type="button">刷新</button>
+  </div>
+</header>
 <p id="status" class="status" role="status" aria-live="polite"></p>
-<section id="rules" aria-labelledby="rules-title">
-<h2 id="rules-title">模型与规则</h2>
-<dl><div><dt>主模型（只读）</dt><dd id="current-model">—</dd></div><div><dt>Scope 来源</dt><dd id="scope">—</dd></div><div><dt>Jev 密钥</dt><dd id="key">—</dd></div></dl>
-<p id="coverage" class="hint"></p>
-<details>
-<summary>设置（默认收起，功能默认开启）</summary>
+<section id="rules">
+<h2 id="rules-title">模型</h2>
+<p class="muted" id="current-line"></p>
 <form id="settings-form"><fieldset id="fields" disabled>
-<label class="check" for="enabled"><input id="enabled" type="checkbox">启用派发前选型</label>
-<div class="field"><label for="model-search">搜索模型</label><input id="model-search" type="search" maxlength="200" placeholder="按名称、ID 或说明筛选，如 flash、grok" autocomplete="off"></div>
-<p class="hint">适用说明写给 Jev 看：轻量模型用于明确可逆的小任务，强模型用于复杂或含糊工作。未填写时会按名称预填常见档位，保存后以你的文字为准。</p>
-<p id="models-empty" class="muted" hidden>没有匹配的模型。</p>
-<div class="scroll" tabindex="0" role="region" aria-label="模型列表，可横向滚动"><table id="models-table"><thead><tr><th scope="col">允许</th><th scope="col">模型</th><th scope="col">适用说明</th></tr></thead><tbody id="models"></tbody></table></div>
-<div class="field"><label for="fallback">回退模型</label><select id="fallback"><option value="">自动选择 low 或当前允许模型</option></select></div>
-<label class="check" for="style-main"><input id="style-main" type="checkbox">界面与样式任务使用主模型＋low（主模型需在允许范围内）</label>
-<details><summary>高级选项</summary><div class="field"><label for="confidence">最低置信度（0–1）</label><input id="confidence" type="number" min="0" max="1" step="0.05" required></div><div class="field"><label for="timeout">判定超时（毫秒，1000–30000）</label><input id="timeout" type="number" min="1000" max="30000" step="1" required></div><div class="field"><label for="instructions">补充指令（最多 2000 字）</label><textarea id="instructions" rows="4" maxlength="2000"></textarea></div></details>
-<button id="save" class="primary" type="submit">保存设置</button>
-</fieldset></form>
+<label class="check" for="enabled"><input id="enabled" type="checkbox"><span id="enabled-label">启用派发前选型</span></label>
+<p id="models-empty" class="muted" hidden></p>
+<div class="scroll" tabindex="0" role="region" aria-labelledby="models-caption"><table id="models-table"><thead><tr><th scope="col" id="col-allow">允许</th><th scope="col" id="col-model">模型</th><th scope="col" id="col-desc">适用说明</th></tr></thead><tbody id="models"></tbody></table></div>
+<div class="field"><label for="fallback" id="fallback-label">回退模型</label><select id="fallback"></select></div>
+<label class="check" for="style-main"><input id="style-main" type="checkbox"><span id="style-label">样式任务用当前模型 + low</span></label>
+<details><summary id="advanced-label">高级</summary>
+<div class="field"><label for="confidence" id="confidence-label">最低置信度</label><input id="confidence" type="number" min="0" max="1" step="0.05" required></div>
+<div class="field"><label for="timeout" id="timeout-label">超时（毫秒）</label><input id="timeout" type="number" min="1000" max="30000" step="1" required></div>
+<div class="field"><label for="instructions" id="instructions-label">补充指令</label><textarea id="instructions" rows="3" maxlength="2000"></textarea></div>
 </details>
+</fieldset></form>
 </section>
-<section id="logs" aria-labelledby="logs-title"><h2 id="logs-title">判定日志</h2><p class="hint">“报告配置”来自执行器报告，不代表已验证服务商实际使用的模型。</p><p id="empty" class="muted">暂无判定日志。</p><div class="scroll" tabindex="0" role="region" aria-label="判定日志，可横向滚动"><table id="logs-table" hidden><thead><tr><th scope="col">时间</th><th scope="col">Agent</th><th scope="col">选型</th><th scope="col">报告配置</th><th scope="col">状态</th><th scope="col">原因</th><th scope="col">备注</th></tr></thead><tbody id="log-rows"></tbody></table></div></section>
+<section id="logs">
+<h2 id="logs-title">日志</h2>
+<p id="empty" class="muted"></p>
+<div class="scroll" tabindex="0" role="region" aria-labelledby="logs-title"><table id="logs-table" hidden><thead><tr>
+<th scope="col" id="col-time">时间</th><th scope="col" id="col-agent">Agent</th><th scope="col" id="col-choice">选型</th>
+<th scope="col" id="col-report">报告</th><th scope="col" id="col-state">状态</th><th scope="col" id="col-reason">原因</th>
+</tr></thead><tbody id="log-rows"></tbody></table></div>
+</section>
 </main>
 <script>
 (() => {
@@ -42,35 +52,89 @@
   const token = location.hash.slice(1);
   history.replaceState(null, '', location.pathname + location.search);
   const $ = id => document.getElementById(id);
-  let snapshot = null, etag = '', dirty = false, busy = false;
-  const modelInputs = new Map(), noteRows = new Map();
-  const descriptionPlaceholder = '写何时选用。轻量（flash 等）：边界清楚、可逆的小改动与常规实现。强模型（gpt 6、sol、kimi k3、glm 5、opus、sonnet、fable、grok）：复杂架构、含糊需求或疑难排错。';
-  function matches(query, model, description) {
-    const raw = query.trim().toLowerCase();
-    if (!raw) return true;
-    const hay = [model.name, model.id, description].join(' ').toLowerCase();
-    const compact = value => String(value).toLowerCase().replace(/[\s._-]+/g, '');
-    return raw.split(/\s+/).every(token => hay.includes(token) || compact(hay).includes(compact(token)));
-  }
-  function filterModels() {
-    const query = $('model-search').value;
-    let visible = 0;
-    for (const fields of modelInputs.values()) {
-      const show = matches(query, fields.model, fields.description.value);
-      fields.row.hidden = !show; if (show) visible++;
+  const ui = {
+    zh: {
+      localeLabel:'语言', refresh:'刷新', rules:'模型', enabled:'启用派发前选型',
+      allow:'允许', model:'模型', desc:'适用说明', current:'当前主模型',
+      fallback:'回退模型', fallbackAuto:'自动：low 或当前允许模型', fallbackGone:'（当前不可用）',
+      style:'样式任务用当前模型 + low', advanced:'高级', minConfidence:'最低置信度',
+      timeout:'超时（毫秒）', instructions:'补充指令', logs:'日志', empty:'暂无日志。',
+      emptyModels:'enabledModels 为空。', currentLine:'主模型 ',
+      outcomes:{selected:'已选型',fallback:'已回退',explicit:'显式指定',blocked:'已阻止',skipped:'已跳过',error:'错误'},
+      cols:{time:'时间',agent:'Agent',choice:'选型',report:'报告',state:'状态',reason:'原因'},
+      unreported:'未报告', score:'置信度',
+      reading:'正在读取…', synced:'已同步。', syncing:'正在同步…',
+      fileError:'设置文件读取失败，请修复后刷新。',
+      auth:'缺少认证信息，请重新执行 /pi-jev-route。',
+      connect:'连接失败，请重新执行 /pi-jev-route。',
+      expire:'认证失效，请重新执行 /pi-jev-route。',
+      request:'请求失败，未保存。', incomplete:'服务返回不完整，未保存。',
+      conflict:'设置已在别处修改，已重新读取。', invalid:'输入无效，未同步。'
+    },
+    en: {
+      localeLabel:'Language', refresh:'Refresh', rules:'Models', enabled:'Route before dispatch',
+      allow:'Allow', model:'Model', desc:'When to use', current:'parent',
+      fallback:'Fallback', fallbackAuto:'Auto: low or an allowed model', fallbackGone:'(unavailable)',
+      style:'Style work uses current model + low', advanced:'Advanced', minConfidence:'Min confidence',
+      timeout:'Timeout (ms)', instructions:'Extra instructions', logs:'Logs', empty:'No logs yet.',
+      emptyModels:'enabledModels is empty.', currentLine:'Parent ',
+      outcomes:{selected:'Selected',fallback:'Fallback',explicit:'Explicit',blocked:'Blocked',skipped:'Skipped',error:'Error'},
+      cols:{time:'Time',agent:'Agent',choice:'Choice',report:'Reported',state:'Status',reason:'Reason'},
+      unreported:'Not reported', score:'confidence',
+      reading:'Loading…', synced:'Synced.', syncing:'Syncing…',
+      fileError:'Settings file unreadable. Fix it, then refresh.',
+      auth:'Missing auth. Run /pi-jev-route again.',
+      connect:'Connection failed. Run /pi-jev-route again.',
+      expire:'Auth expired. Run /pi-jev-route again.',
+      request:'Request failed. Not saved.', incomplete:'Incomplete response. Not saved.',
+      conflict:'Settings changed elsewhere. Reloaded.', invalid:'Invalid input. Not synced.'
     }
-    $('models-empty').hidden = visible !== 0 || !modelInputs.size;
-    $('models-table').hidden = visible === 0;
-  }
-  const outcomes = {selected:'已选型',fallback:'已回退',explicit:'显式指定',blocked:'已阻止',skipped:'已跳过',error:'错误'};
+  };
+  let snapshot = null, etag = '', busy = false, locale = 'zh', saveTimer = 0;
+  const modelInputs = new Map(), logRows = new Map();
+  const L = () => ui[locale] || ui.zh;
   const text = value => typeof value === 'string' ? value : value == null ? '—' : JSON.stringify(value);
   function node(tag, value) { const el = document.createElement(tag); if (value !== undefined) el.textContent = text(value); return el; }
   function status(message, error = false) { $('status').textContent = message; $('status').classList.toggle('error', error); }
+  function applyChrome() {
+    const t = L();
+    document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN';
+    $('locale-label').textContent = t.localeLabel;
+    $('refresh').textContent = t.refresh;
+    $('rules-title').textContent = t.rules;
+    $('enabled-label').textContent = t.enabled;
+    $('col-allow').textContent = t.allow;
+    $('col-model').textContent = t.model;
+    $('col-desc').textContent = t.desc;
+    $('fallback-label').textContent = t.fallback;
+    $('style-label').textContent = t.style;
+    $('advanced-label').textContent = t.advanced;
+    $('confidence-label').textContent = t.minConfidence;
+    $('timeout-label').textContent = t.timeout;
+    $('instructions-label').textContent = t.instructions;
+    $('logs-title').textContent = t.logs;
+    $('empty').textContent = t.empty;
+    $('col-time').textContent = t.cols.time;
+    $('col-agent').textContent = t.cols.agent;
+    $('col-choice').textContent = t.cols.choice;
+    $('col-report').textContent = t.cols.report;
+    $('col-state').textContent = t.cols.state;
+    $('col-reason').textContent = t.cols.reason;
+    if (snapshot) {
+      $('current-line').textContent = t.currentLine + (text(snapshot.currentModel));
+      for (const fields of modelInputs.values()) {
+        fields.allowText.textContent = t.allow;
+        if (fields.currentLabel) fields.currentLabel.textContent = ' ' + t.current;
+      }
+      fallbackOptions();
+      renderLogs(snapshot.logs);
+    }
+  }
   function lock(value) {
     busy = value;
     $('refresh').disabled = value || !token;
     $('fields').disabled = value || !snapshot || !!snapshot.settingsError;
-    for (const row of noteRows.values()) { row.button.disabled = value; row.input.disabled = value; }
+    $('locale').disabled = value || !snapshot || !!snapshot.settingsError;
   }
   async function request(path, method = 'GET', body, version) {
     const headers = {Authorization: 'Bearer ' + token};
@@ -78,32 +142,29 @@
     if (version !== undefined) headers['If-Match'] = version;
     let response;
     try { response = await fetch(path, {method, headers, cache:'no-store', body: body === undefined ? undefined : JSON.stringify(body)}); }
-    catch { throw new Error('连接失败，请重新执行 /pi-jev-route 打开设置。未保存内容仍保留。'); }
+    catch { throw new Error(L().connect); }
     if (!response.ok) {
-      const error = new Error(response.status === 401 || response.status === 403 ? '认证失效，请重新执行 /pi-jev-route。' : '请求失败（' + response.status + '），未保存内容仍保留。');
+      const error = new Error(response.status === 401 || response.status === 403 ? L().expire : L().request);
       error.status = response.status; throw error;
     }
     const data = await response.json();
-    if (!data || !data.settings || !Array.isArray(data.models) || !Array.isArray(data.logs)) throw new Error('服务返回的数据不完整；未保存内容仍保留。');
+    if (!data || !data.settings || !Array.isArray(data.models) || !Array.isArray(data.logs)) throw new Error(L().incomplete);
     return {data, version:response.headers.get('ETag') || ''};
   }
-  function metadata(data) {
-    $('current-model').textContent = text(data.currentModel);
-    $('scope').textContent = ({scoped:'Pi限定范围',all:'未限定：全部可用模型'})[data.scopeMode] || '未报告';
-    $('key').textContent = data.keyAvailable ? '已配置' : '未配置';
-    $('coverage').textContent = data.coverage ? text(data.coverage) : '覆盖范围未报告；仅以实际判定日志为准。';
-  }
   function fallbackOptions(selected = $('fallback').value) {
-    $('fallback').replaceChildren(new Option('自动选择 low 或当前允许模型', ''));
+    const t = L();
+    $('fallback').replaceChildren(new Option(t.fallbackAuto, ''));
     for (const [id, fields] of modelInputs) if (fields.enabled.checked) $('fallback').append(new Option(id, id));
     if (selected && ![...$('fallback').options].some(option => option.value === selected)) {
-      const option = new Option(selected + '（当前不可用，请重新选择）', selected); option.disabled = true; $('fallback').append(option);
+      const option = new Option(selected + ' ' + t.fallbackGone, selected); option.disabled = true; $('fallback').append(option);
     }
     $('fallback').value = selected;
-    $('fallback').setCustomValidity(selected && !modelInputs.get(selected)?.enabled.checked ? '请选择当前允许的回退模型，或使用自动选择。' : '');
+    $('fallback').setCustomValidity(selected && !modelInputs.get(selected)?.enabled.checked ? t.invalid : '');
   }
   function populate(data) {
     const s = data.settings;
+    locale = s.locale === 'en' ? 'en' : 'zh';
+    $('locale').value = locale;
     $('enabled').checked = s.enabled; $('style-main').checked = s.styleUseMain;
     $('confidence').value = s.confidenceThreshold; $('timeout').value = s.timeoutMs; $('instructions').value = s.instructions;
     $('models').replaceChildren(); modelInputs.clear();
@@ -111,88 +172,85 @@
       const tr = node('tr'), checkCell = node('td'), modelCell = node('td'), descriptionCell = node('td');
       const enabled = node('input'); enabled.type = 'checkbox'; enabled.id = 'model-enabled-' + index;
       enabled.checked = s.models?.[model.id]?.enabled ?? model.enabled;
-      const checkLabel = node('label', '允许'); checkLabel.className = 'check'; checkLabel.htmlFor = enabled.id; checkLabel.prepend(enabled); checkCell.append(checkLabel);
+      const checkLabel = node('label'); checkLabel.className = 'check'; checkLabel.htmlFor = enabled.id;
+      const allowText = node('span', L().allow); checkLabel.append(enabled, allowText); checkCell.append(checkLabel);
       modelCell.append(node('strong', model.name || model.id), node('div', model.id));
-      if (model.current) modelCell.append(node('span', '当前主模型'));
+      const currentLabel = model.current ? node('span', ' ' + L().current) : null;
+      if (currentLabel) modelCell.append(currentLabel);
       const description = node('textarea'); description.id = 'model-description-' + index; description.maxLength = 1000; description.rows = 2;
-      description.placeholder = descriptionPlaceholder;
       description.value = s.models?.[model.id]?.description || model.description || '';
-      const label = node('label', (model.name || model.id) + ' 的适用说明'); label.htmlFor = description.id;
-      descriptionCell.append(label, description); tr.append(checkCell, modelCell, descriptionCell); $('models').append(tr);
-      modelInputs.set(model.id, {enabled, description, model, row: tr}); enabled.addEventListener('change', () => fallbackOptions());
+      descriptionCell.append(description); tr.append(checkCell, modelCell, descriptionCell); $('models').append(tr);
+      modelInputs.set(model.id, {enabled, description, allowText, currentLabel, model, row: tr});
+      enabled.addEventListener('change', () => fallbackOptions());
     });
-    fallbackOptions(s.fallbackModel || ''); filterModels(); dirty = false;
+    $('models-empty').hidden = data.models.length !== 0;
+    $('models-empty').textContent = L().emptyModels;
+    $('models-table').hidden = data.models.length === 0;
+    fallbackOptions(s.fallbackModel || '');
   }
   function payload() {
     const models = {...snapshot.settings.models};
     for (const [id, fields] of modelInputs) Object.defineProperty(models, id, {value:{enabled:fields.enabled.checked,description:fields.description.value},enumerable:true,configurable:true,writable:true});
-    return {...snapshot.settings, enabled:$('enabled').checked, fallbackModel:$('fallback').value, styleUseMain:$('style-main').checked, confidenceThreshold:Number($('confidence').value), timeoutMs:Number($('timeout').value), instructions:$('instructions').value, models};
+    return {...snapshot.settings, enabled:$('enabled').checked, fallbackModel:$('fallback').value, styleUseMain:$('style-main').checked, confidenceThreshold:Number($('confidence').value), timeoutMs:Number($('timeout').value), locale:$('locale').value === 'en' ? 'en' : 'zh', instructions:$('instructions').value, models};
   }
   function renderLogs(logs) {
-    $('empty').hidden = logs.length > 0; $('logs-table').hidden = !logs.length;
+    const t = L();
+    $('empty').hidden = logs.length > 0; $('empty').textContent = t.empty; $('logs-table').hidden = !logs.length;
     for (const log of logs) {
-      let row = noteRows.get(log.id);
+      let row = logRows.get(log.id);
       if (!row) {
-        const tr = node('tr'), cells = Array.from({length:6}, () => node('td')), note = node('td');
-        const input = node('textarea'); input.maxLength = 1000; input.rows = 2; input.id = 'note-' + noteRows.size;
-        const label = node('label', '备注'); label.htmlFor = input.id;
-        const button = node('button', '保存备注'); button.type = 'button';
-        const feedback = node('p'); feedback.className = 'note-status'; feedback.setAttribute('aria-live','polite');
-        row = {input,button,feedback,cells,previousNote:log.note || ''}; input.value = row.previousNote;
-        button.addEventListener('click', () => saveNote(log.id, row));
-        note.append(label,input,button,feedback); tr.append(...cells,note); $('log-rows').append(tr); noteRows.set(log.id,row);
+        const tr = node('tr'), cells = Array.from({length:6}, () => node('td'));
+        tr.append(...cells); $('log-rows').append(tr); row = {cells}; logRows.set(log.id, row);
       }
       const date = new Date(log.at);
-      const report = log.actualModel ? text(log.actualModel) + (log.actualThinking ? ' · ' + text(log.actualThinking) : '') : '未报告';
-      const values = [Number.isNaN(date.getTime()) ? text(log.at) : date.toLocaleString('zh-CN'),log.agent || '—',log.requestedModel || '—',report,(outcomes[log.outcome] || text(log.outcome)) + (log.actualStatus ? ' / ' + text(log.actualStatus) : ''),text(log.reason) + (Number.isFinite(log.confidence) ? ' · 置信度 ' + log.confidence : '')];
-      row.cells.forEach((cell,index) => {cell.textContent = text(values[index]);});
-      if (row.input.value === row.previousNote) { row.previousNote = log.note || ''; row.input.value = row.previousNote; }
+      const report = log.actualModel ? text(log.actualModel) + (log.actualThinking ? ' · ' + text(log.actualThinking) : '') : t.unreported;
+      const values = [Number.isNaN(date.getTime()) ? text(log.at) : date.toLocaleString(locale === 'en' ? 'en' : 'zh-CN'), log.agent || '—', log.requestedModel || '—', report, (t.outcomes[log.outcome] || text(log.outcome)) + (log.actualStatus ? ' / ' + text(log.actualStatus) : ''), text(log.reason) + (Number.isFinite(log.confidence) ? ' · ' + t.score + ' ' + log.confidence : '')];
+      row.cells.forEach((cell, index) => { cell.textContent = text(values[index]); });
     }
   }
-  async function saveNote(id, row) {
-    if (busy || !row.input.reportValidity()) return;
-    const note = row.input.value; lock(true); row.feedback.textContent = '正在保存…'; row.feedback.classList.remove('error');
+  async function persist() {
+    if (!snapshot || snapshot.settingsError || busy || !etag || !$('settings-form').checkValidity()) return;
+    const body = payload();
+    lock(true); status(L().syncing);
     try {
-      const {data} = await request('/notes/' + encodeURIComponent(id), 'PATCH', {note,previousNote:row.previousNote});
-      const saved = data.logs.find(log => log.id === id);
-      row.previousNote = saved?.note ?? note; row.input.value = row.previousNote;
-      // ponytail: 备注保存不推进设置版本；设置发生并发变更时交由 If-Match 阻止覆盖。
-      if (data.settingsError) { snapshot.settingsError = data.settingsError; status('设置文件读取失败，请修复后刷新；保存已禁用。', true); }
-      renderLogs(data.logs); row.feedback.textContent = '备注已保存';
-    } catch (error) { row.feedback.textContent = error.status === 409 ? '备注已在别处修改；你的编辑仍保留。请复制后刷新核对。' : error.message; row.feedback.classList.add('error'); }
-    finally { lock(false); }
+      const {data, version} = await request('/settings', 'PUT', body, etag);
+      snapshot = data; etag = version; locale = data.settings.locale === 'en' ? 'en' : 'zh';
+      applyChrome();
+      status(data.settingsError ? L().fileError : L().synced, !!data.settingsError);
+    } catch (error) {
+      if (error.status === 409) {
+        try {
+          const latest = await request('/settings');
+          snapshot = latest.data; etag = latest.version; locale = snapshot.settings.locale === 'en' ? 'en' : 'zh';
+          populate(snapshot); applyChrome(); status(L().conflict, true);
+        } catch (reload) { status(reload.message, true); }
+      } else status(error.message, true);
+    } finally { lock(false); }
+  }
+  function scheduleSave(delay) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { persist(); }, delay);
   }
   async function refresh() {
     if (busy || !token) return;
-    if ((dirty || [...noteRows.values()].some(row => row.input.value !== row.previousNote)) && !confirm('刷新会丢弃尚未保存的设置与备注，是否继续？')) return;
-    lock(true); status('正在读取…');
+    lock(true); status(L().reading);
     try {
-      const {data,version} = await request('/settings'); snapshot = data; etag = version;
-      metadata(data); populate(data); noteRows.clear(); $('log-rows').replaceChildren(); renderLogs(data.logs);
-      status(data.settingsError ? '设置文件读取失败，请修复后刷新；保存已禁用。' : '已读取最新设置。', !!data.settingsError);
-    } catch (error) { status(error.message,true); }
+      const {data, version} = await request('/settings'); snapshot = data; etag = version;
+      populate(data); applyChrome();
+      logRows.clear(); $('log-rows').replaceChildren(); renderLogs(data.logs);
+      status(data.settingsError ? L().fileError : L().synced, !!data.settingsError);
+    } catch (error) { status(error.message, true); }
     finally { lock(false); }
   }
   $('settings-form').addEventListener('input', event => {
-    if (event.target.id === 'model-search') { filterModels(); return; }
-    dirty = true; status('有未保存的设置。');
+    if (event.target.closest('textarea') || event.target.type === 'number') scheduleSave(400);
+    else scheduleSave(0);
   });
   $('fallback').addEventListener('change', () => fallbackOptions());
-  $('settings-form').addEventListener('submit', async event => {
-    event.preventDefault();
-    if (busy || !snapshot || snapshot.settingsError || !$('settings-form').reportValidity()) return;
-    if (!etag) { status('缺少设置版本，无法安全保存；请刷新后重试。',true); return; }
-    const body = payload(); lock(true); status('正在保存…');
-    try {
-      const {data,version} = await request('/settings','PUT',body,etag); snapshot = data; etag = version;
-      metadata(data); populate(data); renderLogs(data.logs);
-      status(data.settingsError ? '设置文件读取失败；保存已禁用。' : '设置已保存。',!!data.settingsError);
-    } catch (error) { status(error.status === 409 ? '设置已在别处修改；你的编辑仍保留。请复制需要保留的内容，再刷新核对。' : error.message,true); }
-    finally { lock(false); }
-  });
-  $('refresh').addEventListener('click',refresh);
-  window.addEventListener('beforeunload', event => { if (dirty || [...noteRows.values()].some(row => row.input.value !== row.previousNote)) {event.preventDefault();event.returnValue = '';} });
-  if (!token) { status('缺少认证信息，请重新执行 /pi-jev-route 打开设置。',true); lock(false); } else refresh();
+  $('locale').addEventListener('change', () => { locale = $('locale').value === 'en' ? 'en' : 'zh'; applyChrome(); scheduleSave(0); });
+  $('settings-form').addEventListener('submit', event => event.preventDefault());
+  $('refresh').addEventListener('click', refresh);
+  if (!token) { status(L().auth, true); lock(false); } else refresh();
 })();
 </script>
 </body>

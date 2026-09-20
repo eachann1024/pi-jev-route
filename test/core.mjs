@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { DEFAULTS, openStore, parseSettings } from '../lib/store.ts';
 import { defaultModelDescription, LIGHT_MODEL_DESCRIPTION, STRONG_MODEL_DESCRIPTION } from '../lib/describe.ts';
+import { loadPiEnabledModels, resolveEnabledIds, resolveListedModel, splitModelRef } from '../lib/enabled.ts';
 import { routeTask } from '../lib/router.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'pi-jev-route-test-'));
@@ -21,7 +22,30 @@ try {
     assert.equal(defaultModelDescription(id, name), STRONG_MODEL_DESCRIPTION, id);
   }
   assert.equal(defaultModelDescription('openai/gpt-4o', 'GPT-4o'), '');
-  for (const invalid of [null, [], { extra: true }, { enabled: 1 }, { models: [] }, { timeoutMs: 999 }, { timeoutMs: 30001 }, { timeoutMs: 1000.5 }, { confidenceThreshold: NaN }, { confidenceThreshold: 1.1 }, { instructions: 'x'.repeat(2001) }, { fallbackModel: 'bare' }, { fallbackModel: 'p/bad id' }, { models: { 'p/m': { enabled: true, description: 'x', extra: 1 } } }, { models: { 'p/m': { enabled: true, description: 'x'.repeat(1001) } } }, { models: Object.fromEntries(Array.from({ length: 201 }, (_, i) => [`p/m${i}`, { enabled: true, description: '' }])) }]) assert.throws(() => parseSettings(invalid), TypeError);
+  writeFileSync(join(dir, 'settings.json'), JSON.stringify({ defaultProvider: '9router', enabledModels: ['low', 'high', 'loop', 'missing'] }));
+  assert.deepEqual(loadPiEnabledModels(dir), { tokens: ['low', 'high', 'loop', 'missing'], defaultProvider: '9router' });
+  const catalog = new Map([
+    ['9router/low', { provider: '9router', id: 'low', name: 'low', reasoning: true }],
+    ['9router/high', { provider: '9router', id: 'high', name: 'high', reasoning: true }],
+    ['9router/loop', { provider: '9router', id: 'loop', name: 'loop', reasoning: true }],
+    ['fixture/other', { provider: 'fixture', id: 'other', name: 'Other', reasoning: false }],
+  ]);
+  assert.deepEqual(resolveEnabledIds(['low', 'high', 'loop', 'missing'], catalog, '9router'), ['9router/low', '9router/high', '9router/loop', '9router/missing']);
+  assert.deepEqual(resolveEnabledIds(['9router/low'], catalog, '9router'), ['9router/low']);
+  assert.deepEqual(resolveEnabledIds(['low', 'high'], new Map(), '9router'), ['9router/low', '9router/high']);
+  assert.deepEqual(resolveEnabledIds([], catalog, '9router'), []);
+  assert.deepEqual(loadPiEnabledModels(join(dir, 'missing-agent')), { tokens: [], defaultProvider: '' });
+  const listed = ['9router/low', '9router/high', '9router/loop'];
+  assert.deepEqual(splitModelRef('google/gemini-3.8-flash:low'), { token: 'google/gemini-3.8-flash', thinking: 'low' });
+  assert.deepEqual(splitModelRef('9router/low'), { token: '9router/low' });
+  assert.equal(resolveListedModel('9router/low:high', listed, '9router'), '9router/low');
+  assert.equal(resolveListedModel('low', listed, '9router'), '9router/low');
+  assert.equal(resolveListedModel('loop:low', listed, '9router'), '9router/loop');
+  assert.equal(resolveListedModel('google/gemini-3.8-flash:low', listed, '9router'), undefined);
+  assert.equal(resolveListedModel('pi-jev-route', listed, '9router'), undefined);
+  assert.equal(resolveListedModel('high', listed, ''), '9router/high');
+  assert.equal(resolveListedModel('high', ['a/high', 'b/high'], ''), undefined);
+  for (const invalid of [null, [], { extra: true }, { enabled: 1 }, { models: [] }, { timeoutMs: 999 }, { timeoutMs: 30001 }, { timeoutMs: 1000.5 }, { confidenceThreshold: NaN }, { confidenceThreshold: 1.1 }, { locale: 'fr' }, { instructions: 'x'.repeat(2001) }, { fallbackModel: 'bare' }, { fallbackModel: 'p/bad id' }, { models: { 'p/m': { enabled: true, description: 'x', extra: 1 } } }, { models: { 'p/m': { enabled: true, description: 'x'.repeat(1001) } } }, { models: Object.fromEntries(Array.from({ length: 201 }, (_, i) => [`p/m${i}`, { enabled: true, description: '' }])) }]) assert.throws(() => parseSettings(invalid), TypeError);
   const path = join(dir, 'private', 'route.sqlite');
   store = openStore(path);
   assert.equal(statSync(join(dir, 'private')).mode & 0o777, 0o700);
@@ -112,6 +136,8 @@ try {
   const pendingAbort = new AbortController();
   const pending = run('x', settings, candidates, main, pendingAbort.signal); pendingAbort.abort(); await assert.rejects(pending);
   const timed = await run('x', { ...settings, timeoutMs: 1000 }); assert.equal(timed.outcome, 'fallback'); assert.match(timed.reason, /超时/);
+  mock(); const english = await run('x', { ...settings, locale: 'en' }); assert.match(english.reason, /default low thinking/);
+  assert.equal(defaultModelDescription('9router/low', 'low', 'en'), 'Lightweight model. Use for bounded, reversible reads, cleanup, small edits, and routine implementation; prefer this for most subtasks.');
   console.log('core: settings, SQLite persistence/CAS, routing, scope, redaction, abort and timeout passed');
 } finally {
   store?.close(); globalThis.fetch = savedFetch;

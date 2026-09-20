@@ -4,9 +4,9 @@ import { DatabaseSync } from 'node:sqlite';
 
 export type Settings = {
   enabled: boolean; fallbackModel: string; styleUseMain: boolean; confidenceThreshold: number;
-  timeoutMs: number; instructions: string; models: Record<string, { enabled: boolean; description: string }>;
+  timeoutMs: number; locale: 'zh' | 'en'; instructions: string; models: Record<string, { enabled: boolean; description: string }>;
 };
-export const DEFAULTS: Settings = { enabled: true, fallbackModel: '', styleUseMain: true, confidenceThreshold: .55, timeoutMs: 5000, instructions: '', models: {} };
+export const DEFAULTS: Settings = { enabled: true, fallbackModel: '', styleUseMain: true, confidenceThreshold: .55, timeoutMs: 5000, locale: 'zh', instructions: '', models: {} };
 export type RouteLog = {
   id: string; at: string | number; sessionId: string; toolCallId: string; agent: string; taskHash: string;
   outcome: 'selected' | 'fallback' | 'explicit' | 'blocked' | 'skipped' | 'error'; requestedModel: string;
@@ -35,6 +35,7 @@ export function parseSettings(value: unknown): Settings {
   keys(input, Object.keys(DEFAULTS));
   const result = { ...DEFAULTS, ...input, models: {} } as Settings;
   for (const key of ['enabled', 'styleUseMain'] as const) if (typeof result[key] !== 'boolean') throw new TypeError('开关必须是布尔值');
+  if (result.locale !== 'zh' && result.locale !== 'en') throw new TypeError('语言必须是 zh 或 en');
   id(result.fallbackModel, true);
   range(result.confidenceThreshold, 0, 1);
   range(result.timeoutMs, 1000, 30000);
