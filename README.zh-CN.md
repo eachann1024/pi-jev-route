@@ -1,6 +1,6 @@
 # Pi Jev Route
 
-![Pi Jev Route — The right model. The same main session.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
+![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
 为 Pi 的子代理任务自动选择合适模型；主会话模型与思考强度保持不变。
 
@@ -17,8 +17,6 @@ pi install npm:@each1024/pi-jev-route
 
 `/pi-jev-route` 打开本机设置与审计页面。首次欢迎流程也会启动回环服务以显示欢迎页；仅安装 npm 包不会自动打开浏览器。服务闲置后关闭，不会创建公网监听或隧道。
 
-![Route with intent. Your models. Your scope.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-routing.png)
-
 ## 路由方式
 
 - 主会话负责澄清需求、调研风险、委派有边界的工作、关键决策和总结。
@@ -27,9 +25,11 @@ pi install npm:@each1024/pi-jev-route
 
 扩展覆盖模型发起的单个原生 Pi 子代理结构化调用；不全局拦截工作流脚本、`/run`、定时任务、其他扩展的直接委派或外部 CLI/job。嵌套路由不作保证。[覆盖范围与审计细节](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md#覆盖范围与审计)。
 
-![Stay in control. Local settings. Clear decisions.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-control.png)
-
 ## 本机页面
+
+![Model controls and routing audit — feature overview](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-control.png)
+
+**模型范围与路由审计。** 选择允许使用的模型和回退策略，查看选型及回退记录。上图为功能示意，不是界面截图；审计不代表任务完成。
 
 设置页列出配置模型，并提供路由、回退和审计选项；修改会保存到本机。页面不加载外部脚本、字体或资源。远程或无界面会话不会自动打开本机浏览器。
 

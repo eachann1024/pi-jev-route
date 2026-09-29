@@ -1,6 +1,6 @@
 # Pi Jev Route
 
-![Pi Jev Route — The right model. The same main session.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
+![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
 Route eligible Pi subagent tasks to a suitable model with Jev—without changing the main session’s model or thinking level.
 
@@ -17,8 +17,6 @@ On first use in an interactive local Pi session, the extension opens its English
 
 The `/pi-jev-route` command opens the local settings and audit console. The first-run welcome flow also starts its loopback server to show the welcome page; installing the npm package alone does not open a browser. The server shuts down after inactivity and does not create a public listener or tunnel.
 
-![Route with intent. Your models. Your scope.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-routing.png)
-
 ## How routing works
 
 - The main session clarifies the request, investigates risks, delegates bounded work, makes key decisions, and summarizes results.
@@ -27,9 +25,11 @@ The `/pi-jev-route` command opens the local settings and audit console. The firs
 
 The extension covers model-originated structured calls to a single native Pi subagent. It does not globally intercept workflow scripts, `/run`, schedules, other extensions’ direct delegation, or external CLI/job runners. Nested routing is not guaranteed. [Coverage and audit details](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md#coverage-and-audit).
 
-![Stay in control. Local settings. Clear decisions.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-control.png)
-
 ## Local console
+
+![Model controls and routing audit — feature overview](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-control.png)
+
+**Model controls and routing audit.** Choose allowed models and fallback policy; inspect selections and fallback events. Feature diagram, not a UI screenshot; audit does not prove task completion.
 
 The console lists configured models and exposes routing, fallback, and audit settings. Changes are saved locally. It uses no external scripts, fonts, or assets. Remote or headless sessions do not automatically open a local browser.
 
