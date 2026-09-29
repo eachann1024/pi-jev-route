@@ -36,6 +36,8 @@ try {
   store.addLog({ ...base, id: 'audit-unique-two' });
   assert.equal(store.findLog('audit-unique-one').log.id, base.id);
   assert.equal(store.findLog('audit-unique').ambiguous, true);
+  assert.equal(store.findLog('%').log, undefined);
+  assert.equal(store.findLog('_').log, undefined);
   assert.equal(store.getLatestLog().id, 'audit-unique-two');
   store.updateLog(base.id, { runId: 'run-1', actualStatus: 'accepted' });
   assert.equal(store.getLog(base.id).runId, 'run-1');

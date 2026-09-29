@@ -127,6 +127,7 @@ export function openStore(path: string) {
     getSettings, getLog,
     findLog(reference: string): { log?: RouteLog; ambiguous: boolean } {
       string(reference, 256);
+      if (!reference) return { ambiguous: false };
       const exact = getLog(reference);
       if (exact) return { log: exact, ambiguous: false };
       const rows = db.prepare('SELECT json FROM logs WHERE substr(id, 1, length(?))=? LIMIT 2').all(reference, reference);
@@ -149,6 +150,7 @@ export function openStore(path: string) {
     updateLog(id: string, patch: Partial<Pick<RouteLog, 'actualModel' | 'actualThinking' | 'actualStatus' | 'asyncId' | 'runId' | 'executionState' | 'updatedAt' | 'evidence'>>) {
       const valid = object(patch);
       keys(valid, ['actualModel', 'actualThinking', 'actualStatus', 'asyncId', 'runId', 'executionState', 'updatedAt', 'evidence']);
+      for (const key of ['actualModel', 'actualThinking', 'actualStatus', 'asyncId', 'runId'] as const) if (valid[key] !== undefined) string(valid[key], 1000);
       edit(id, log => ({ ...log, ...patch }));
     },
     setNote(id: string, note: string, expectedNote?: string) {

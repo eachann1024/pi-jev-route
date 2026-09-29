@@ -55,6 +55,7 @@ try {
   assert.deepEqual(store.getLogsBySession('current-session').map(log => log.id), [own.id, legacy.id]);
   assert.equal(store.findLogById(own.id, 'other-session'), undefined);
   assert.equal(store.findLogById(own.id, 'current-session').id, own.id);
+  assert.deepEqual(store.findLog(own.id), { log: own, ambiguous: false });
   assert.equal(store.getLogs(200).length, 132);
 
   const historyTool = tools.get('jev_route_history');
@@ -71,6 +72,11 @@ try {
   store.addLog(wildcard);
   assert.equal(store.findLog('literal-').ambiguous, false);
   assert.equal(store.findLog('literal-X').log, undefined, '前缀查询按字面匹配通配符字符');
+  const exactPreference = { ...legacy, id: 'literal-prefix-long' };
+  store.addLog(exactPreference);
+  assert.deepEqual(store.findLog('literal-%-id'), { log: wildcard, ambiguous: false }, '完全匹配优先于可能重叠的前缀');
+  store.updateLog(own.id, { evidence: { source: 'tool_result', exitCode: 0, resultCount: 1 }, executionState: 'completed', updatedAt: new Date().toISOString() });
+  assert.equal(store.getLog(own.id).evidence.exitCode, 0);
 
   await emit('tool_result', { toolName: 'subagent', input: { action: 'list' }, isError: false, details: { agentCapabilities: { agents: [{ name: 'worker', executable: true, runner: { type: 'pi' } }] } } });
   const event = toolEvent({ agent: 'worker', task: 'Trace a harmless formatter task.' });
