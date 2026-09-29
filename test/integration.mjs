@@ -150,6 +150,13 @@ try {
   const html = await readFile(new URL('../web/index.html', import.meta.url), 'utf8');
   const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1]; assert(script);
   assert.match(html, /id="locale"/);
+  // Every literal UI lookup must still resolve after markup refactors.
+  const staticIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]));
+  for (const [, id] of script.matchAll(/\$\('([^']+)'\)/g)) {
+    assert(staticIds.has(id), `UI lookup references missing element: ${id}`);
+  }
+  assert.match(html, /id="style-auto" type="radio" name="style-policy"/);
+  assert.match(html, /id="style-main" type="radio" name="style-policy"/);
   assert.doesNotMatch(html, /保存设置/);
   assert.doesNotMatch(html, /保存备注/);
   assert.doesNotMatch(html, /id="model-search"/);

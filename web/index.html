@@ -1,50 +1,50 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <title>Pi Jev Route</title>
 <style>
-:root{color-scheme:light;--background:#fff;--foreground:#242424;--primary:#292929;--secondary:#f5f5f5;--muted:#626262;--destructive:#a12727;--border:#d9d9d9;--control-border:#858585;--ring:#454545;--text-sm:.875rem;--text-base:1rem;--text-lg:1.25rem;--radius-sm:4px;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px}
-*{box-sizing:border-box}body{margin:0;background:var(--background);color:var(--foreground);font:var(--text-base)/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:960px;margin:auto;padding:var(--space-8) var(--space-6) 64px}header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}h1{font-size:var(--text-lg);font-weight:600;margin:0}h2{font-size:var(--text-base);font-weight:600;margin:0 0 var(--space-4)}p{margin:var(--space-2) 0}.muted,.hint{color:var(--muted);font-size:var(--text-sm)}section{padding-top:var(--space-8)}button,input,select,textarea{font:inherit;color:inherit}button{background:var(--background);border:1px solid var(--control-border);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-4);cursor:pointer;min-height:36px}button:hover{background:var(--secondary)}button:disabled{opacity:.5;cursor:not-allowed}:focus-visible{outline:2px solid var(--ring);outline-offset:3px}fieldset{border:0;padding:0;margin:0;min-width:0}label{display:block;font-size:var(--text-sm);margin-bottom:var(--space-2)}.check{display:flex;align-items:center;gap:var(--space-2);min-height:32px}.check input{width:20px;height:20px;accent-color:var(--primary);margin:0}input[type=number],select,textarea{width:100%;border:1px solid var(--control-border);border-radius:var(--radius-sm);background:var(--background);padding:var(--space-2);font-size:var(--text-sm)}textarea{resize:vertical;min-height:64px}textarea::placeholder{color:var(--muted)}.field{margin:var(--space-4) 0;max-width:480px}#locale{width:auto;min-width:120px}.tools{display:flex;align-items:center;gap:var(--space-3)}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:var(--text-sm);text-align:left}th{font-weight:500;color:var(--muted);background:var(--secondary)}th,td{padding:var(--space-3);border-bottom:1px solid var(--border);vertical-align:top}#models-table{min-width:560px}#models-table td:last-child{width:55%}#logs-table{min-width:880px}#logs-table td{min-width:88px;max-width:220px;overflow-wrap:anywhere}details{border-top:1px solid var(--border);padding:var(--space-4) 0;margin:var(--space-4) 0}summary{cursor:pointer;min-height:24px}.status{min-height:24px;margin:var(--space-3) 0;font-size:var(--text-sm)}.error{color:var(--destructive)}#logs{border-top:1px solid var(--border);margin-top:var(--space-8)}[hidden]{display:none!important}@media(max-width:600px){main{padding:var(--space-6) var(--space-4)}h1{font-size:var(--text-base)}}
+:root{color-scheme:light dark;--background:light-dark(#f6f3ed,#141614);--surface:light-dark(#fffcf7,#1d211d);--foreground:light-dark(#1f241f,#eceee8);--primary:light-dark(#2f5a3e,#b7d4b0);--secondary:light-dark(#eeebe4,#292e29);--muted:light-dark(#626b62,#a8b0a4);--destructive:light-dark(#a52c26,#ffafa5);--border:light-dark(#ded9cf,#3a4038);--control-border:light-dark(#777b73,#899187);--ring:var(--primary);--text-xs:.75rem;--text-sm:.875rem;--text-base:1rem;--text-lg:1.375rem;--text-title:clamp(1.75rem,4vw,2.375rem);--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--radius-sm:4px}
+*{box-sizing:border-box}body{margin:0;background:var(--background);color:var(--foreground);font:var(--text-base)/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:900px;margin:auto;padding:var(--space-8) var(--space-6) 56px}header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;padding-bottom:var(--space-4);border-bottom:1px solid var(--border)}h1{font:italic 400 var(--text-title)/1.1 "Iowan Old Style","Palatino Linotype","Songti SC",serif;letter-spacing:.01em;margin:0}h2{font:400 var(--text-lg)/1.25 "Iowan Old Style","Palatino Linotype","Songti SC",serif;margin:0}p{margin:var(--space-2) 0}.muted,.hint{color:var(--muted);font-size:var(--text-sm)}.subtitle{color:var(--muted);margin:var(--space-1) 0 0;font-size:var(--text-sm)}section{padding-top:var(--space-6)}button,input,select,textarea{font:inherit;color:inherit}button{background:var(--surface);border:1px solid var(--control-border);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3);cursor:pointer;min-height:40px}button:hover{background:var(--secondary)}button:disabled{opacity:.5;cursor:not-allowed}:focus-visible{outline:2px solid var(--ring);outline-offset:3px}:focus:not(:focus-visible){outline:none;box-shadow:none}fieldset{border:0;padding:0;margin:0;min-width:0}label{display:block;font-size:var(--text-sm);margin-bottom:var(--space-2)}.check{display:flex;align-items:center;gap:var(--space-2);min-height:32px}.check input{width:20px;height:20px;accent-color:var(--primary);margin:0}input[type=number],select,textarea{width:100%;border:1px solid var(--control-border);border-radius:var(--radius-sm);background-color:var(--surface);padding:var(--space-2);font-size:var(--text-sm)}select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 12px) 50%;background-size:4px 4px,4px 4px;background-repeat:no-repeat;padding-right:36px;height:40px;line-height:1.25}textarea{resize:vertical;min-height:64px}textarea::placeholder{color:var(--muted)}.field{margin:var(--space-4) 0;max-width:480px}#locale{width:auto;min-width:110px}.tools{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}.tools label{margin:0}.tools button,.tools select{height:40px;min-height:40px;font-size:var(--text-sm);line-height:1.25}.status{min-height:24px;margin:var(--space-2) 0;font-size:var(--text-sm)}.error{color:var(--destructive)}.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-3)}.model-list{border-top:1px solid var(--border)}.model-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--border)}.model-identity{min-width:0}.model-name{display:flex;align-items:center;gap:var(--space-2);font-weight:600}.model-id{display:block;color:var(--muted);font-size:var(--text-xs);overflow-wrap:anywhere}.model-controls{display:flex;align-items:flex-start;gap:var(--space-3);min-width:0}.model-controls>.check{flex:0 0 auto;margin:0}.model-controls>.model-description{display:block;min-width:0;flex:1;min-height:64px;margin:0;overflow-wrap:anywhere}.model-name{flex-wrap:wrap;overflow-wrap:anywhere}.model-name>span:first-child{min-width:0}.badge{font-size:var(--text-xs);font-weight:500;color:var(--primary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 var(--space-1)}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:var(--text-sm);text-align:left}th{font-weight:500;color:var(--muted);background:var(--secondary)}th,td{padding:var(--space-3);border-bottom:1px solid var(--border);vertical-align:top}#logs-table{min-width:880px}#logs-table td{min-width:88px;max-width:220px;overflow-wrap:anywhere}details{border-top:1px solid var(--border);padding:var(--space-3) 0;margin:var(--space-3) 0}summary{cursor:pointer;min-height:24px}.segmented{display:inline-flex;border:1px solid var(--control-border);border-radius:var(--radius-sm);overflow:hidden}.segmented label{display:flex;align-items:center;gap:var(--space-2);margin:0;padding:var(--space-2) var(--space-3);cursor:pointer}.segmented label+label{border-left:1px solid var(--control-border)}.segmented input{accent-color:var(--primary);margin:0}.segmented label:has(input:checked){background:var(--secondary);color:var(--primary)}.style-hint{margin-top:var(--space-2)}#logs{border-top:1px solid var(--border);margin-top:var(--space-6)}#log-count{float:right}#logs summary{display:list-item;font:400 var(--text-lg)/1.25 "Iowan Old Style","Palatino Linotype","Songti SC",serif}[hidden]{display:none!important}@media(max-width:600px){main{padding:var(--space-6) var(--space-4)}.model-row{grid-template-columns:1fr;gap:var(--space-2)}.model-controls{align-items:flex-start}.segmented{display:flex;width:100%}.segmented label{flex:1;justify-content:center;padding:var(--space-2)}.tools{width:100%}.tools #refresh{margin-left:auto}}@media(max-width:375px){.model-controls{flex-direction:column}.model-description{width:100%}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <main>
 <header>
-  <h1>Pi Jev Route</h1>
+  <div><h1>Pi Jev Route</h1><p class="subtitle" id="page-subtitle">Choose suitable models for subagents and keep a local decision log.</p></div>
   <div class="tools">
-    <label for="locale" id="locale-label">语言</label>
-    <select id="locale"><option value="zh">中文</option><option value="en">English</option></select>
-    <button id="refresh" type="button">刷新</button>
+    <label for="locale" id="locale-label">Language</label>
+    <select id="locale"><option value="en">English</option><option value="zh">中文</option></select>
+    <button id="refresh" type="button">Refresh</button>
   </div>
 </header>
 <p id="status" class="status" role="status" aria-live="polite"></p>
 <section id="rules">
-<h2 id="rules-title">模型</h2>
+<div class="section-head"><h2 id="rules-title">Models</h2><span id="enabled-count" class="muted" aria-live="polite"></span></div>
 <p class="muted" id="current-line"></p>
 <form id="settings-form"><fieldset id="fields" disabled>
-<label class="check" for="enabled"><input id="enabled" type="checkbox"><span id="enabled-label">启用派发前选型</span></label>
+<label class="check" for="enabled"><input id="enabled" type="checkbox"><span id="enabled-label">Route before dispatch</span></label>
 <p id="models-empty" class="muted" hidden></p>
-<div class="scroll" tabindex="0" role="region" aria-labelledby="models-caption"><table id="models-table"><thead><tr><th scope="col" id="col-allow">允许</th><th scope="col" id="col-model">模型</th><th scope="col" id="col-desc">适用说明</th></tr></thead><tbody id="models"></tbody></table></div>
-<div class="field"><label for="fallback" id="fallback-label">回退模型</label><select id="fallback"></select></div>
-<label class="check" for="style-main"><input id="style-main" type="checkbox"><span id="style-label">样式任务用当前模型 + low</span></label>
-<details><summary id="advanced-label">高级</summary>
-<div class="field"><label for="confidence" id="confidence-label">最低置信度</label><input id="confidence" type="number" min="0" max="1" step="0.05" required></div>
-<div class="field"><label for="timeout" id="timeout-label">超时（毫秒）</label><input id="timeout" type="number" min="1000" max="30000" step="1" required></div>
-<div class="field"><label for="instructions" id="instructions-label">补充指令</label><textarea id="instructions" rows="3" maxlength="2000"></textarea></div>
+<div class="model-list" id="models" aria-label="Model list"></div>
+<div class="field"><label for="fallback" id="fallback-label">Fallback</label><select id="fallback"></select></div>
+<fieldset class="style-choice"><legend class="muted" id="style-title">Style task policy</legend><div class="segmented" role="radiogroup" aria-labelledby="style-title"><label for="style-auto"><input id="style-auto" type="radio" name="style-policy" value="auto"><span id="style-auto-label">Automatic selection</span></label><label for="style-main"><input id="style-main" type="radio" name="style-policy" value="main"><span id="style-label">Current model · low</span></label></div><p class="muted style-hint" id="style-hint">This policy affects subagent dispatch only; it does not change the parent session.</p></fieldset>
+<details><summary id="advanced-label">Advanced</summary>
+<div class="field"><label for="confidence" id="confidence-label">Min confidence</label><input id="confidence" type="number" min="0" max="1" step="0.05" required></div>
+<div class="field"><label for="timeout" id="timeout-label">Timeout (ms)</label><input id="timeout" type="number" min="1000" max="30000" step="1" required></div>
+<div class="field"><label for="instructions" id="instructions-label">Extra instructions</label><textarea id="instructions" rows="3" maxlength="2000"></textarea></div>
 </details>
 </fieldset></form>
 </section>
-<section id="logs">
-<h2 id="logs-title">日志</h2>
+<details id="logs">
+<summary id="logs-summary"><span id="logs-title">Logs</span><span id="log-count" class="muted"></span></summary>
 <p id="empty" class="muted"></p>
 <div class="scroll" tabindex="0" role="region" aria-labelledby="logs-title"><table id="logs-table" hidden><thead><tr>
-<th scope="col" id="col-time">时间</th><th scope="col" id="col-agent">Agent</th><th scope="col" id="col-choice">选型</th>
-<th scope="col" id="col-report">报告</th><th scope="col" id="col-state">状态</th><th scope="col" id="col-reason">原因</th>
+<th scope="col" id="col-time">Time</th><th scope="col" id="col-agent">Agent</th><th scope="col" id="col-choice">Choice</th>
+<th scope="col" id="col-report">Reported</th><th scope="col" id="col-state">Status</th><th scope="col" id="col-reason">Reason</th>
 </tr></thead><tbody id="log-rows"></tbody></table></div>
-</section>
+</details>
 </main>
 <script>
 (() => {
@@ -54,10 +54,11 @@
   const $ = id => document.getElementById(id);
   const ui = {
     zh: {
-      localeLabel:'语言', refresh:'刷新', rules:'模型', enabled:'启用派发前选型',
-      allow:'允许', model:'模型', desc:'适用说明', current:'当前主模型',
+      localeLabel:'语言', refresh:'刷新', subtitle:'为子代理派发选择合适模型，并保留本地决策记录。', rules:'模型', enabled:'启用派发前选型',
+      allow:'启用', current:'当前主模型',
       fallback:'回退模型', fallbackAuto:'自动：low 或当前允许模型', fallbackGone:'（当前不可用）',
-      style:'样式任务用当前模型 + low', advanced:'高级', minConfidence:'最低置信度',
+      styleTitle:'样式任务策略', styleAuto:'自动选型', styleMain:'当前模型 · low', styleHint:'此策略仅影响子代理派发，不改变主会话。', enabledCount:n=>`已启用 ${n} 个模型`, modelList:'模型列表', details:'编辑说明',
+      advanced:'高级', minConfidence:'最低置信度',
       timeout:'超时（毫秒）', instructions:'补充指令', logs:'日志', empty:'暂无日志。',
       emptyModels:'enabledModels 为空。', currentLine:'主模型 ',
       outcomes:{selected:'已选型',fallback:'已回退',explicit:'显式指定',blocked:'已阻止',skipped:'已跳过',error:'错误'},
@@ -72,10 +73,11 @@
       conflict:'设置已在别处修改，已重新读取。', invalid:'输入无效，未同步。'
     },
     en: {
-      localeLabel:'Language', refresh:'Refresh', rules:'Models', enabled:'Route before dispatch',
-      allow:'Allow', model:'Model', desc:'When to use', current:'parent',
+      localeLabel:'Language', refresh:'Refresh', subtitle:'Choose suitable models for subagents and keep a local decision log.', rules:'Models', enabled:'Route before dispatch',
+      allow:'Enabled', current:'Main model',
       fallback:'Fallback', fallbackAuto:'Auto: low or an allowed model', fallbackGone:'(unavailable)',
-      style:'Style work uses current model + low', advanced:'Advanced', minConfidence:'Min confidence',
+      styleTitle:'Style task policy', styleAuto:'Automatic selection', styleMain:'Current model · low', styleHint:'This policy affects subagent dispatch only; it does not change the parent session.', enabledCount:n=>`${n} models enabled`, modelList:'Model list', details:'Edit description',
+      advanced:'Advanced', minConfidence:'Min confidence',
       timeout:'Timeout (ms)', instructions:'Extra instructions', logs:'Logs', empty:'No logs yet.',
       emptyModels:'enabledModels is empty.', currentLine:'Parent ',
       outcomes:{selected:'Selected',fallback:'Fallback',explicit:'Explicit',blocked:'Blocked',skipped:'Skipped',error:'Error'},
@@ -90,9 +92,9 @@
       conflict:'Settings changed elsewhere. Reloaded.', invalid:'Invalid input. Not synced.'
     }
   };
-  let snapshot = null, etag = '', busy = false, locale = 'zh', saveTimer = 0;
+  let snapshot = null, etag = '', busy = false, locale = 'en', saveTimer = 0;
   const modelInputs = new Map(), logRows = new Map();
-  const L = () => ui[locale] || ui.zh;
+  const L = () => ui[locale] || ui.en;
   const text = value => typeof value === 'string' ? value : value == null ? '—' : JSON.stringify(value);
   function node(tag, value) { const el = document.createElement(tag); if (value !== undefined) el.textContent = text(value); return el; }
   function status(message, error = false) { $('status').textContent = message; $('status').classList.toggle('error', error); }
@@ -100,14 +102,17 @@
     const t = L();
     document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN';
     $('locale-label').textContent = t.localeLabel;
+    $('page-subtitle').textContent = t.subtitle;
     $('refresh').textContent = t.refresh;
     $('rules-title').textContent = t.rules;
     $('enabled-label').textContent = t.enabled;
-    $('col-allow').textContent = t.allow;
-    $('col-model').textContent = t.model;
-    $('col-desc').textContent = t.desc;
     $('fallback-label').textContent = t.fallback;
-    $('style-label').textContent = t.style;
+    $('style-title').textContent = t.styleTitle;
+    $('style-auto-label').textContent = t.styleAuto;
+    $('style-label').textContent = t.styleMain;
+    $('style-hint').textContent = t.styleHint;
+    $('models').setAttribute('aria-label', t.modelList);
+    $('models-empty').textContent = t.emptyModels;
     $('advanced-label').textContent = t.advanced;
     $('confidence-label').textContent = t.minConfidence;
     $('timeout-label').textContent = t.timeout;
@@ -124,8 +129,11 @@
       $('current-line').textContent = t.currentLine + (text(snapshot.currentModel));
       for (const fields of modelInputs.values()) {
         fields.allowText.textContent = t.allow;
-        if (fields.currentLabel) fields.currentLabel.textContent = ' ' + t.current;
+        fields.enabled.setAttribute('aria-label', t.allow + ': ' + fields.model.id);
+        fields.currentLabel.textContent = t.current;
+        fields.description.setAttribute('aria-label', t.details + ': ' + (fields.model.name || fields.model.id));
       }
+      updateModelCount();
       fallbackOptions();
       renderLogs(snapshot.logs);
     }
@@ -165,28 +173,35 @@
     const s = data.settings;
     locale = s.locale === 'en' ? 'en' : 'zh';
     $('locale').value = locale;
-    $('enabled').checked = s.enabled; $('style-main').checked = s.styleUseMain;
+    $('enabled').checked = s.enabled; $('style-main').checked = s.styleUseMain; $('style-auto').checked = !s.styleUseMain;
     $('confidence').value = s.confidenceThreshold; $('timeout').value = s.timeoutMs; $('instructions').value = s.instructions;
     $('models').replaceChildren(); modelInputs.clear();
     data.models.forEach((model, index) => {
-      const tr = node('tr'), checkCell = node('td'), modelCell = node('td'), descriptionCell = node('td');
+      const row = node('div'); row.className = 'model-row';
+      const modelCell = node('div'); modelCell.className = 'model-identity';
+      const controls = node('div'); controls.className = 'model-controls';
       const enabled = node('input'); enabled.type = 'checkbox'; enabled.id = 'model-enabled-' + index;
       enabled.checked = s.models?.[model.id]?.enabled ?? model.enabled;
       const checkLabel = node('label'); checkLabel.className = 'check'; checkLabel.htmlFor = enabled.id;
-      const allowText = node('span', L().allow); checkLabel.append(enabled, allowText); checkCell.append(checkLabel);
-      modelCell.append(node('strong', model.name || model.id), node('div', model.id));
-      const currentLabel = model.current ? node('span', ' ' + L().current) : null;
-      if (currentLabel) modelCell.append(currentLabel);
-      const description = node('textarea'); description.id = 'model-description-' + index; description.maxLength = 1000; description.rows = 2;
+      const allowText = node('span', L().allow); checkLabel.append(enabled, allowText);
+      const name = node('div'); name.className = 'model-name'; name.append(node('span', model.name || model.id));
+      const currentLabel = node('span', L().current); currentLabel.className = 'badge';
+      if (model.current) name.append(currentLabel);
+      modelCell.append(name, node('span', model.id)); modelCell.lastChild.className = 'model-id';
+      const description = node('textarea'); description.className = 'model-description'; description.id = 'model-description-' + index; description.maxLength = 1000; description.rows = 2;
+      description.setAttribute('aria-label', L().details + ': ' + (model.name || model.id));
       description.value = s.models?.[model.id]?.description || model.description || '';
-      descriptionCell.append(description); tr.append(checkCell, modelCell, descriptionCell); $('models').append(tr);
-      modelInputs.set(model.id, {enabled, description, allowText, currentLabel, model, row: tr});
-      enabled.addEventListener('change', () => fallbackOptions());
+      controls.append(checkLabel, description); row.append(modelCell, controls); $('models').append(row);
+      modelInputs.set(model.id, {enabled, description, allowText, currentLabel, model, row});
+      enabled.addEventListener('change', () => { fallbackOptions(); updateModelCount(); });
     });
+    updateModelCount();
     $('models-empty').hidden = data.models.length !== 0;
     $('models-empty').textContent = L().emptyModels;
-    $('models-table').hidden = data.models.length === 0;
     fallbackOptions(s.fallbackModel || '');
+  }
+  function updateModelCount() {
+    $('enabled-count').textContent = L().enabledCount([...modelInputs.values()].filter(fields => fields.enabled.checked).length);
   }
   function payload() {
     const models = {...snapshot.settings.models};
@@ -196,6 +211,7 @@
   function renderLogs(logs) {
     const t = L();
     $('empty').hidden = logs.length > 0; $('empty').textContent = t.empty; $('logs-table').hidden = !logs.length;
+    $('log-count').textContent = logs.length;
     for (const log of logs) {
       let row = logRows.get(log.id);
       if (!row) {
