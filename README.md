@@ -1,8 +1,6 @@
 # Pi Jev Route
 
 
-https://github.com/user-attachments/assets/7f6656ac-094e-48bc-b9a5-34f9de008631
-
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
 Route eligible Pi subagent tasks to a suitable model with Jev—without changing the main session’s model or thinking level.
@@ -14,11 +12,15 @@ pi install npm:@each1024/pi-jev-route
 
 Already using `pi-subagents`? Keep it; the extension uses its native launcher. Requires Node **22.18+** and Pi **0.85.1+**. After installation, run `/reload`. Routing is enabled by default. [简体中文](README.zh-CN.md)
 
+https://github.com/user-attachments/assets/7f6656ac-094e-48bc-b9a5-34f9de008631
+
 ## Get started
 
 On first use in an interactive local Pi session, the extension opens its English welcome page in your browser. Choose **Open settings** to review the available models and routing options. To open the welcome page again, run `/pi-jev-route welcome`.
 
 The `/pi-jev-route` command opens the local settings and audit console. The first-run welcome flow also starts its loopback server to show the welcome page; installing the npm package alone does not open a browser. The server shuts down after inactivity and does not create a public listener or tunnel.
+
+
 
 ## How routing works
 
