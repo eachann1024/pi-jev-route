@@ -82,7 +82,7 @@ export default function jevRoute(pi: ExtensionAPI) {
   let opening: Promise<void> | undefined;
   const pending = new Map<string, string>();
   const agents = new Map<string, { type: string; model?: string }>();
-  const invalidate = () => { lifetime.abort(); lifetime = new AbortController(); pending.clear(); agents.clear(); web?.close(); web = undefined; };
+  const invalidate = () => { lifetime.abort(); lifetime = new AbortController(); pending.clear(); agents.clear(); web?.close(); web = undefined; opening = undefined; };
   const settings = () => store?.getSettings() ?? { ...DEFAULTS };
   const ensureStore = () => {
     store ??= openStore(join(getAgentDir(), "jev-route.sqlite"));
@@ -95,12 +95,53 @@ export default function jevRoute(pi: ExtensionAPI) {
       currentModel: context?.model ? modelId(context.model) : "", scopeMode: loadPiEnabledModels().tokens.length ? "enabledModels" : "none",
       keyAvailable, logs: store?.getLogs() ?? [], settingsError, coverage: COVERAGE };
   };
+  const isLocalInteractive = (ctx: ExtensionContext) => ctx.mode === "tui" && !process.env.SSH_CONNECTION && !process.env.SSH_CLIENT && !process.env.SSH_TTY && !process.env.CI && !process.env.GITHUB_ACTIONS && !process.env.PI_SUBAGENT;
+  const ensureWeb = async (ctx: ExtensionContext) => {
+    if (!isLocalInteractive(ctx)) return undefined;
+    ensureStore();
+    const operation = lifetime;
+    if (web && !web.closed) return web;
+    const attempt = opening ??= (async () => {
+      const { startWeb } = await import("./lib/web.ts");
+      const welcome = await readFile(new URL("./web/onboarding.html", import.meta.url), "utf8");
+      const server = await startWeb(snapshot,
+        (value, previous) => { ensureStore().saveSettings(parseSettings(value), previous); },
+        (id, value, previous) => { ensureStore().setNote(id, value, previous); },
+        300000, welcome, () => ensureStore().setMetadata("onboarding-complete", "yes"));
+      if (operation !== lifetime) server.close(); else web = server;
+    })();
+    try { await attempt; } finally { if (opening === attempt) opening = undefined; }
+    return operation === lifetime && web && !web.closed ? web : undefined;
+  };
+  const openPage = async (ctx: ExtensionContext, page: "welcome" | "settings") => {
+    const operation = lifetime;
+    const server = await ensureWeb(ctx);
+    if (!server || operation !== lifetime) return false;
+    server.touch();
+    const url = new URL(server.url);
+    url.pathname = page === "welcome" ? "/welcome" : "/";
+    try {
+      const result = process.platform === "darwin" ? await pi.exec("open", [url.href], { timeout: 5000 }) : process.platform === "win32" ? await pi.exec("rundll32.exe", ["url.dll,FileProtocolHandler", url.href], { timeout: 5000 }) : await pi.exec("xdg-open", [url.href], { timeout: 5000 });
+      if (result.code === 0) return true;
+    } catch { /* Preserve routing even if the OS cannot launch a browser. */ }
+    if (operation === lifetime) ctx.ui.notify(`Open this page locally: ${url.href}`, "warning");
+    return false;
+  };
   const initialize = async (ctx: ExtensionContext) => {
     invalidate(); context = ctx;
     try { ensureStore(); settingsError = ""; }
-    catch { settingsError = "无法读取路由配置或日志；未覆盖原文件。修复后 /reload。"; ctx.ui.notify(settingsError, "warning"); }
+    catch { settingsError = "无法读取路由配置或日志；未覆盖原文件。修复后 /reload。"; ctx.ui.notify(settingsError, "warning"); return; }
     keyAvailable = Boolean(process.env.TYPESAFE_API_KEY?.trim());
     if (!keyAvailable) { try { keyAvailable = Boolean((await readFile(join(homedir(), ".config/typesafe/api_key"), "utf8")).trim()); } catch { /* Not configured. */ } }
+    if (!isLocalInteractive(ctx)) return;
+    const db = store!, owner = randomUUID(), operation = lifetime;
+    try {
+      if (!db.claimOnboarding(owner)) return;
+      if (!await openPage(ctx, "welcome")) { if (store === db) db.releaseOnboarding(owner); }
+    } catch {
+      if (store === db) { try { db.releaseOnboarding(owner); } catch { /* Retry remains possible after the lease expires. */ } }
+      if (operation === lifetime) ctx.ui.notify("Could not open the welcome page. Run /pi-jev-route welcome to retry.", "warning");
+    }
   };
   pi.on("session_start", (_, ctx) => initialize(ctx));
   pi.on("session_tree", (_, ctx) => { invalidate(); context = ctx; });
@@ -237,6 +278,7 @@ export default function jevRoute(pi: ExtensionAPI) {
     handler: async (args: string, ctx: ExtensionContext) => {
       context = ctx;
       const action = args.trim() || "settings";
+      if (action === "welcome") { if (!isLocalInteractive(ctx)) { ctx.ui.notify("欢迎页只在本机交互式 Pi 中打开。", "warning"); return; } try { await openPage(ctx, "welcome"); } catch { ctx.ui.notify("无法打开欢迎页，请检查文件权限。", "error"); } return; }
       const describeLog = (record: RouteLog) => {
         const model = record.requestedModel || "未知（未记录请求模型）";
         const execution = record.actualStatus || "未收到执行结果；实际执行情况未知";
@@ -260,27 +302,10 @@ export default function jevRoute(pi: ExtensionAPI) {
         catch { ctx.ui.notify("设置未保存，原文件未覆盖。", "error"); }
         return;
       }
-      if (action !== "settings") { ctx.ui.notify("用法：/pi-jev-route [settings|on|off|status|last|log <id或唯一前缀>]", "info"); return; }
-      if (ctx.mode !== "tui") { ctx.ui.notify("请在本机交互式 Pi 中打开 HTML 设置。", "warning"); return; }
-      try {
-        ensureStore();
-        if (!web || web.closed) {
-          const operation = lifetime;
-          opening ??= (async () => {
-            const { startWeb } = await import("./lib/web.ts");
-            const server = await startWeb(snapshot,
-              (value, previous) => { ensureStore().saveSettings(parseSettings(value), previous); },
-              (id, value, previous) => { ensureStore().setNote(id, value, previous); });
-            if (operation !== lifetime) server.close(); else web = server;
-          })();
-          try { await opening; } finally { opening = undefined; }
-        }
-        if (!web || web.closed) return;
-        web.touch();
-        const url = web.url;
-        const result = process.platform === "darwin" ? await pi.exec("open", [url]) : process.platform === "win32" ? await pi.exec("rundll32.exe", ["url.dll,FileProtocolHandler", url]) : await pi.exec("xdg-open", [url]);
-        if (result.code !== 0) ctx.ui.notify(`请在本机打开：${url}`, "info");
-      } catch { ctx.ui.notify("无法打开路由设置，请检查文件权限。", "error"); }
+      if (action !== "settings") { ctx.ui.notify("用法：/pi-jev-route [settings|welcome|on|off|status|last|log <id或唯一前缀>]", "info"); return; }
+      if (!isLocalInteractive(ctx)) { ctx.ui.notify("请在本机交互式 Pi 中打开 HTML 设置。", "warning"); return; }
+      try { await openPage(ctx, "settings"); }
+      catch { ctx.ui.notify("无法打开路由设置，请检查文件权限。", "error"); }
     },
   };
   pi.registerCommand("pi-jev-route", command);

@@ -6,7 +6,7 @@ export type Settings = {
   enabled: boolean; fallbackModel: string; styleUseMain: boolean; confidenceThreshold: number;
   timeoutMs: number; locale: 'zh' | 'en'; instructions: string; models: Record<string, { enabled: boolean; description: string }>;
 };
-export const DEFAULTS: Settings = { enabled: true, fallbackModel: '', styleUseMain: true, confidenceThreshold: .55, timeoutMs: 5000, locale: 'zh', instructions: '', models: {} };
+export const DEFAULTS: Settings = { enabled: true, fallbackModel: '', styleUseMain: true, confidenceThreshold: .55, timeoutMs: 5000, locale: 'en', instructions: '', models: {} };
 export type RouteLog = {
   id: string; at: string | number; sessionId: string; toolCallId: string; agent: string; taskHash: string;
   outcome: 'selected' | 'fallback' | 'explicit' | 'blocked' | 'skipped' | 'error'; requestedModel: string;
@@ -98,9 +98,16 @@ export function openStore(path: string) {
   try {
     chmodSync(path, 0o600);
     db.exec('PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;');
-    db.exec('CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS logs (id TEXT PRIMARY KEY, json TEXT NOT NULL);');
+    db.exec('CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS logs (id TEXT PRIMARY KEY, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS plugin_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);');
     const saved = db.prepare('SELECT json FROM settings WHERE id=1').get();
     if (saved) stored(saved.json as string, parseSettings);
+    transaction(() => {
+      if (!db.prepare("SELECT 1 FROM plugin_metadata WHERE key='onboarding-state'").get()) {
+        const legacy = saved || db.prepare('SELECT 1 FROM logs LIMIT 1').get();
+        db.prepare("INSERT INTO plugin_metadata(key,value) VALUES('onboarding-state',?)").run(legacy ? 'legacy' : 'pending');
+        if (legacy) db.prepare("INSERT OR IGNORE INTO plugin_metadata(key,value) VALUES('onboarding-complete','yes')").run();
+      }
+    });
   } catch (error) { db.close(); throw error; }
   function transaction<T>(run: () => T): T {
     db.exec('BEGIN IMMEDIATE');
@@ -125,6 +132,23 @@ export function openStore(path: string) {
   }
   return {
     getSettings, getLog,
+    claimOnboarding(owner: string, now = Date.now()): boolean {
+      return transaction(() => {
+        if (db.prepare("SELECT 1 FROM plugin_metadata WHERE key='onboarding-complete'").get()) return false;
+        const row = db.prepare("SELECT value FROM plugin_metadata WHERE key='onboarding-lease'").get();
+        if (row) { const lease = JSON.parse(String(row.value)); if (lease.until > now) return false; }
+        db.prepare("INSERT INTO plugin_metadata(key,value) VALUES('onboarding-lease',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(JSON.stringify({ owner, until: now + 300000 }));
+        return true;
+      });
+    },
+    releaseOnboarding(owner: string) {
+      transaction(() => {
+        const row = db.prepare("SELECT value FROM plugin_metadata WHERE key='onboarding-lease'").get();
+        if (row && JSON.parse(String(row.value)).owner === owner) db.prepare("DELETE FROM plugin_metadata WHERE key='onboarding-lease'").run();
+      });
+    },
+    getMetadata(key: string): string | undefined { string(key, 128); const row = db.prepare('SELECT value FROM plugin_metadata WHERE key=?').get(key); return row?.value as string | undefined; },
+    setMetadata(key: string, value: string) { string(key, 128); string(value, 1024); db.prepare('INSERT INTO plugin_metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key, value); },
     findLog(reference: string): { log?: RouteLog; ambiguous: boolean } {
       string(reference, 256);
       if (!reference) return { ambiguous: false };

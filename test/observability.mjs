@@ -40,7 +40,10 @@ try {
     kind: { type: 'choice', choice: 'routine', confidence: .99 },
     effort: { type: 'score', score: 1, confidence: .1 },
   } }), { status: 200 });
+  const originalMode = ctx.mode;
+  ctx.mode = 'print';
   await emit('session_start', {});
+  ctx.mode = originalMode;
   store = openStore(join(root, 'jev-route.sqlite'));
 
   const legacy = { id: 'legacy-record', at: new Date().toISOString(), sessionId: 'current-session', toolCallId: 'legacy-call', agent: 'worker', taskHash: 'hash', outcome: 'selected', requestedModel: 'fixture/low:low', reason: 'legacy', note: '' };

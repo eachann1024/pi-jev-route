@@ -16,7 +16,7 @@ const { default: extension, scopedCandidates } = await import('../index.ts');
 const low = { provider: 'fixture', id: 'low', name: 'Low', reasoning: true };
 const main = { provider: 'fixture', id: 'main', name: 'Main', reasoning: true };
 const other = { provider: 'fixture', id: 'other', name: 'Other', reasoning: false };
-let calls = 0, kind = 'routine', captured;
+let calls = 0, kind = 'routine', captured, execFail = false, openedUrls = [];
 const response = () => ({ ok: true, json: async () => ({ answers: {
   model: { type: 'choice', choice: 'm0', confidence: .95 },
   kind: { type: 'choice', choice: kind, confidence: .95 },
@@ -24,7 +24,7 @@ const response = () => ({ ok: true, json: async () => ({ answers: {
 } }) });
 const fakeFetch = async (_, options) => { calls++; captured = JSON.parse(options.body); return response(); };
 globalThis.fetch = fakeFetch;
-let ui, db;
+let ui, welcomeUi, db;
 const hooks = new Map(), commands = new Map(), notices = [], entries = [];
 const ctx = { mode: 'tui', model: main, scopedModels: [{ model: low }, { model: main }],
   modelRegistry: { getAvailable: () => [low, main, other] },
@@ -32,7 +32,7 @@ const ctx = { mode: 'tui', model: main, scopedModels: [{ model: low }, { model: 
   ui: { notify: message => notices.push(message) }, signal: undefined,
 };
 const tools = new Map();
-const pi = { on: (event, handler) => hooks.set(event, handler), registerCommand: (name, command) => commands.set(name, command), registerTool: tool => tools.set(tool.name, tool),
+const pi = { exec: async (_bin, args) => { openedUrls.push(args.at(-1)); if (execFail) throw new Error('browser unavailable'); return { code: 0 }; }, on: (event, handler) => hooks.set(event, handler), registerCommand: (name, command) => commands.set(name, command), registerTool: tool => tools.set(tool.name, tool),
   registerEntryRenderer: () => {}, appendEntry: (...entry) => entries.push(entry),
   getAllTools: () => [{ name: 'subagent' }], setModel: () => { throw Error('Must never change parent model'); },
   setThinkingLevel: () => { throw Error('Must never change parent thinking'); },
@@ -45,13 +45,16 @@ const event = (input, id = randomUUID()) => ({ toolName: 'subagent', toolCallId:
 
 try {
   await writeEnabled(['low', 'main']);
+  execFail = true;
   await emit('session_start');
   db = openStore(join(root, 'jev-route.sqlite'));
+  assert.match(openedUrls[0], /\/welcome#\w{48}$/);
   const prompt = await emit('before_agent_start', { systemPrompt: 'original' });
-  assert(prompt.systemPrompt.startsWith('original')); assert.match(prompt.systemPrompt, /主会话负责需求对齐、任务调度、关键决策和总结/);
-  assert.match(prompt.systemPrompt, /省略 model/); assert.equal(calls, 0);
+  assert.equal(hooks.get('before_agent_start')({ systemPrompt: 'original' }, ctx)?.systemPrompt.startsWith('original'), true);
+  assert(prompt.systemPrompt.startsWith('original')); assert.match(prompt.systemPrompt, /Jev subagent routing: keep the parent session model/);
+  assert.match(prompt.systemPrompt, /omit model/); assert.equal(calls, 0);
   assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(m => m.id), ['fixture/low', 'fixture/main']);
-  assert.match(scopedCandidates(ctx, db.getSettings())[0].description, /轻量模型/);
+  assert.match(scopedCandidates(ctx, db.getSettings())[0].description, /Lightweight model/i);
   ctx.scopedModels = [];
   assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(m => m.id), ['fixture/low', 'fixture/main']);
   await writeEnabled([]);
@@ -133,6 +136,13 @@ try {
   ui = await startWeb(() => ({ settings: db.getSettings(), models: [], logs: db.getLogs() }),
     (value, previous) => db.saveSettings(value, previous), (id, note, previous) => db.setNote(id, note, previous));
   const url = new URL(ui.url), authorization = `Bearer ${url.hash.slice(1)}`, origin = url.origin;
+  welcomeUi = await startWeb(() => ({ settings: db.getSettings(), models: [], logs: db.getLogs() }), (value, previous) => db.saveSettings(value, previous), (id, note, previous) => db.setNote(id, note, previous), 300000, '<button>Welcome</button>', () => db.setMetadata('onboarding-complete', 'yes'));
+  const welcomeBase = new URL(welcomeUi.url); welcomeBase.pathname = '/welcome';
+  assert.match(await (await nativeFetch(welcomeBase)).text(), /Welcome/);
+  const welcomeAuth = { authorization: `Bearer ${new URL(welcomeUi.url).hash.slice(1)}` };
+  assert.equal((await nativeFetch(new URL('/onboarding/complete', welcomeUi.url), { method: 'POST', headers: welcomeAuth })).status, 200);
+  assert.equal(db.getMetadata('onboarding-complete'), 'yes');
+  assert.match(await (await nativeFetch(new URL('/welcome', welcomeUi.url))).text(), /Welcome/);
   const page = await nativeFetch(origin); assert.equal(page.status, 200); assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   assert.equal((await nativeFetch(origin + '/settings')).status, 403);
   assert.equal((await nativeFetch(origin + '/settings', { headers: { authorization, origin: 'https://hostile.invalid' } })).status, 403);
@@ -164,7 +174,7 @@ try {
   const checked = spawnSync(process.execPath, ['--check', jsPath], { encoding: 'utf8' }); assert.equal(checked.status, 0, checked.stderr);
   console.log('PASS: real extension hooks, unchanged parent, scopes, explicit pins, lifecycle, private HTTP, conflicts and HTML syntax');
 } finally {
-  ui?.close(); db?.close(); await emit('session_shutdown');
+  ui?.close(); welcomeUi?.close(); db?.close(); await emit('session_shutdown');
   globalThis.fetch = nativeFetch;
   if (oldDir === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = oldDir;
   if (oldKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = oldKey;

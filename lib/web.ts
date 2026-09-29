@@ -8,8 +8,11 @@ export async function startWeb(
   save: (value: unknown, previous: string) => void,
   note: (id: string, value: string, previous: string) => void,
   idleMs = 300000,
+  onboardingHtml?: string,
+  onboardingDone?: () => void,
 ) {
   const html = await readFile(new URL("../web/index.html", import.meta.url));
+  const welcomeHtml = onboardingHtml;
   const token = randomBytes(24).toString("hex");
   let origin = "", closed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -29,16 +32,16 @@ export async function startWeb(
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("Referrer-Policy", "no-referrer");
-    res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
     if (req.headers.host !== origin.slice(7) || (req.headers.origin && req.headers.origin !== origin)) {
       res.writeHead(403).end(); return;
     }
-    if (req.method === "GET" && req.url === "/") {
-      res.setHeader("Content-Type", "text/html; charset=utf-8"); res.end(html); return;
+    if (req.method === "GET" && (req.url === "/" || (welcomeHtml && req.url === "/welcome"))) {
+      res.setHeader("Content-Type", "text/html; charset=utf-8"); res.end(req.url === "/welcome" && welcomeHtml ? welcomeHtml : html); return;
     }
     if (req.headers.authorization !== `Bearer ${token}`) { res.writeHead(403).end(); return; }
     const noteMatch = /^\/notes\/([0-9a-f-]{36})$/.exec(req.url ?? "");
-    if (req.url !== "/settings" && !noteMatch) { res.writeHead(404).end(); return; }
+    if (req.url !== "/settings" && req.url !== "/onboarding/complete" && !noteMatch) { res.writeHead(404).end(); return; }
     try {
       if (req.method === "PUT" || req.method === "PATCH") {
         if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") { res.writeHead(415).end(); return; }
@@ -61,6 +64,9 @@ export async function startWeb(
             || record.note.length > 1000 || record.previousNote.length > 1000) throw new TypeError();
           note(noteMatch[1], record.note, record.previousNote);
         } else { res.writeHead(405).end(); return; }
+      } else if (req.method === "POST" && req.url === "/onboarding/complete") {
+        if (!onboardingDone) { res.writeHead(404).end(); return; }
+        onboardingDone();
       } else if (req.method !== "GET" || req.url !== "/settings") { res.writeHead(405).end(); return; }
       const data = snapshot();
       touch();

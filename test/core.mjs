@@ -15,6 +15,8 @@ process.env.HOME = dir;
 let store;
 try {
   assert.deepEqual(parseSettings({}), DEFAULTS);
+  assert.equal(DEFAULTS.locale, 'en');
+  assert.equal(parseSettings({ locale: 'zh' }).locale, 'zh');
   assert.equal(defaultModelDescription('google/gemini-2.5-flash', 'Flash'), LIGHT_MODEL_DESCRIPTION);
   assert.equal(defaultModelDescription('9router/low', 'low'), LIGHT_MODEL_DESCRIPTION);
   assert.equal(defaultModelDescription('cursor/grok-4.6', 'Cursor Grok 4.6 Medium'), STRONG_MODEL_DESCRIPTION);
@@ -135,7 +137,7 @@ try {
   globalThis.fetch = () => new Promise(() => {});
   const pendingAbort = new AbortController();
   const pending = run('x', settings, candidates, main, pendingAbort.signal); pendingAbort.abort(); await assert.rejects(pending);
-  const timed = await run('x', { ...settings, timeoutMs: 1000 }); assert.equal(timed.outcome, 'fallback'); assert.match(timed.reason, /超时/);
+  const timed = await run('x', { ...settings, timeoutMs: 1000 }); assert.equal(timed.outcome, 'fallback'); assert.match(timed.reason, /timed out/);
   mock(); const english = await run('x', { ...settings, locale: 'en' }); assert.match(english.reason, /default low thinking/);
   assert.equal(defaultModelDescription('9router/low', 'low', 'en'), 'Lightweight model. Use for bounded, reversible reads, cleanup, small edits, and routine implementation; prefer this for most subtasks.');
   console.log('core: settings, SQLite persistence/CAS, routing, scope, redaction, abort and timeout passed');
