@@ -1,5 +1,9 @@
 # Pi Jev Route
 
+[![观看 32 秒引导视频：三步，让子代理自动选模型](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/docs/media/guide-zh.webp)](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4)
+
+▶ 32 秒引导视频：[简体中文](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4) · [English](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-en.mp4)
+
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
 为 Pi 的子代理任务自动选择合适模型；主会话模型与思考强度保持不变。

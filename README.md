@@ -1,5 +1,9 @@
 # Pi Jev Route
 
+[![Watch the 32-second guide: three steps to let sub-agents pick their own model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/docs/media/guide-en.webp)](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-en.mp4)
+
+▶ 32-second guide: [English](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-en.mp4) · [简体中文](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4)
+
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
 Route eligible Pi subagent tasks to a suitable model with Jev—without changing the main session’s model or thinking level.
