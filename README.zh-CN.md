@@ -1,56 +1,49 @@
 # Pi Jev Route
 
-**主会话固定，派发子代理前自动选型。** 不再提供上一版的主会话 `auto` / `shadow` 模式，也不与负责回复润色的 Pi Jev Reply 混用开关。
+![Pi Jev Route — The right model. The same main session.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
+
+为 Pi 的子代理任务自动选择合适模型；主会话模型与思考强度保持不变。
 
 ```sh
 pi install npm:pi-subagents@0.69.0
 pi install npm:@each1024/pi-jev-route
 ```
 
-已经装有 `pi-subagents` 无需重复安装。已核对 Pi 0.85.1、pi-subagents 0.69.0；要求 Node ≥22.18，实际检查环境为 22.22.3。在 Pi 执行 `/reload` 即可，插件默认开启。选型时会话会显示 `pi-jev-route` 标识；需要改选项或看日志时再执行 `/pi-jev-route`。
+已经安装 `pi-subagents`？保留即可，本扩展使用它的原生启动流程。要求 Node **22.18+**、Pi **0.85.1+**。安装后执行 `/reload`；路由默认开启。
 
-## 工作方式
+## 开始使用
 
-- 主会话负责需求对齐、任务调度、关键决策和总结；应先调研清楚风险点并给出完整解决方案，不自动换模型或思考档位。
-- 激进地使用子代理，越多越好，目的是节省时间；不要派没有独立产出的空代理。绝大部分情况使用 low。
-- 主会话先调用 `subagent({action:"list", capabilities:true})` 确认代理类型；随后正常使用结构化 `subagent({agent, task})`，省略 `model` 即由插件选型。
-- Jev 根据 `settings.json` 的 `enabledModels`、模型说明和完整子任务选择模型与思考强度，普通任务优先低档。
-- 样式任务默认用当前主模型＋low；主模型不在允许范围时明确阻止，而不是越界。模型不支持思考时使用 off。
-- 调用参数或代理配置中指定的模型，仅当它属于当前 `enabledModels` 且页面允许列表时保留；列表外的指定（例如未启用的 google/*，或把插件名 pi-jev-route 当成模型）会被忽略，改由 Jev 从列表选型。已有权限、工具、预算及子代理启动流程保持不变。
-- 默认验收只要求编译；用户另外要求实测时再做，不能把编译成功说成运行或视觉已验证。
+首次在本机交互式 Pi 会话中使用时，扩展会在浏览器打开英文欢迎页。点击 **Open settings** 查看可用模型和路由选项。之后可执行 `/pi-jev-route welcome` 手动重新打开欢迎页。
 
-## HTML 中可以做什么
+`/pi-jev-route` 打开本机设置与审计页面。首次欢迎流程也会启动回环服务以显示欢迎页；仅安装 npm 包不会自动打开浏览器。服务闲置后关闭，不会创建公网监听或隧道。
 
-列出 `~/.pi/agent/settings.json` 的全部 `enabledModels`。改任何一项都会自动保存。可切换中文 / English，界面和之后写入的日志语言跟着走。没有判定备注框。`enabledModels` 为空则不列出模型。
+![Route with intent. Your models. Your scope.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-routing.png)
 
-```text
-/pi-jev-route          打开 HTML 设置和日志
-/pi-jev-route last     查看最新持久审计记录
-/pi-jev-route log <编号或唯一前缀>  查询单条审计记录
-/pi-jev-route status   查看状态与覆盖范围
-/pi-jev-route on       开启子代理路由
-/pi-jev-route off      关闭子代理路由，不改当前模型
-```
+## 路由方式
 
-页面只在执行命令时启动，监听 `127.0.0.1` 随机端口，使用随机令牌，五分钟闲置或切换会话后关闭。不加载外部脚本、字体和资源。并发编辑出现版本冲突会拒绝覆盖。远程或无界面运行不会自动创建公网服务或隧道。
+- 主会话负责澄清需求、调研风险、委派有边界的工作、关键决策和总结。
+- 符合条件的结构化原生 Pi 子代理调用由 Jev 从 `enabledModels` 选型；子代理启动、并行、工具、权限、预算和结果仍由原扩展负责。
+- 独立工作可并行。普通任务通常优先轻量模型；样式任务在允许时使用当前主模型与 low。主会话模型和思考强度保持不变。
 
-## 覆盖边界
+扩展覆盖模型发起的单个原生 Pi 子代理结构化调用；不全局拦截工作流脚本、`/run`、定时任务、其他扩展的直接委派或外部 CLI/job。嵌套路由不作保证。[覆盖范围与审计细节](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md#覆盖范围与审计)。
 
-**自动覆盖：**模型发起的结构化、单个原生 Pi 子任务，包括 `async:true`。
+![Stay in control. Local settings. Clear decisions.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-control.png)
 
-**不保证覆盖：**脚本/模板工作流内部 `runs.run/all`、`/run`、定时任务、其他扩展直接 RPC/delegation、外部 CLI/job 执行器和子代理内部再次派发。工具层发现工作流或远程派发时，记录“跳过”并保留原参数；直接 `/run` 等绕过工具拦截的路径不会产生路由日志。插件不是全局派发强制拦截器。
+## 本机页面
 
-代理能力列表是当前会话的缓存。外部修改代理定义后应重新 list；会话内 create/update/delete 会让缓存失效。未知类型不猜测，会先阻止并提示列出能力。缓存不能证明代理配置之后从未变化。
+设置页列出配置模型，并提供路由、回退和审计选项；修改会保存到本机。页面不加载外部脚本、字体或资源。远程或无界面会话不会自动打开本机浏览器。
 
-## 隐私与失败处理
+## 隐私与凭证
 
-复用 `TYPESAFE_API_KEY` 或 `~/.config/typesafe/api_key`，直连 TypeSafe，不需要额外 Gateway 账户。Key 不写入页面或日志。
+凭证复用 `TYPESAFE_API_KEY` 或 `~/.config/typesafe/api_key`。分类会发送子任务、代理名称、候选模型说明和路由规则，不发送主会话、系统提示词、工具结果或思考；可能产生单独费用。完整说明见[技术参考](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md#隐私凭证与失败处理)。
 
-每次符合条件的派发最多调用 Jev 一次，默认五秒超时、不重试。发送内容仅含子任务、代理名、候选模型及说明、补充路由规则；不发送主会话历史、系统提示词、工具输出或思考。分类有独立费用。疑似凭据或超长输入跳过出站，不截断；凭据检测只是词法筛查，不是完整脱敏保证。
+本机 SQLite 设置与日志仅所有者可读写；日志保存任务 hash，不保存任务原文或凭证。不要在模型说明中填写凭证。
 
-缺 Key、请求失败、超时、无效回答或低置信度依次回退到：允许范围内的配置回退模型、`low` 模型、当前主模型；均不可用就阻止派发。需要用户决定时也阻止。路由不授予额外操作权限，置信度不是任务成功率。
+## 失败与审计
 
-设置和日志保存在 Pi agent 目录的 `jev-route.sqlite`，支持 `PI_CODING_AGENT_DIR`，使用仅所有者可读写权限。日志只保留任务 hash，不保存原文、密钥或分类原始响应；手写备注与模型说明也不要填入凭据。不会自动删除日志。Node 22 的内置 SQLite 可能显示实验性提示。终端审计标记显示简短原因、请求模型和审计编号，并明确表示这不代表任务已执行。兼容的结构化审计字段记录原因码、路由耗时、候选模型 ID、回退来源和有限规则快照；区分 HTTP、超时、网络和无效响应，但不记录原始错误、响应正文、任务全文或密钥。`last` 和 `log` 查询 SQLite 持久记录，匹配多个记录的前缀会被拒绝。工具结果返回的 async/run ID 会留存，但不代表完成，也不确认实际模型。原始 subagent 结果保持原样并追加模型可见回执，包含路由编号、请求/报告模型、路由结果、执行证据状态和查询方式。只读工具 `jev_route_history` 默认列出当前会话最近记录或按 ID 查询；仅显式设置 `allSessions` 才跨会话。不会保存任务或结果全文。exit code 0 仅说明工具报告执行完成，不是对工作质量的独立验证。
+每次符合条件的派发最多请求一次，默认五秒超时且不重试；缺凭证、超时、无效响应、敏感或过长输入、低置信度时使用允许的回退模型，否则阻止派发。凭证检测并非完整秘密扫描。
+
+异步任务只记为已接受，不代表完成；审计记录和运行 ID 不独立证明执行或正确性。详见[覆盖与审计](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md#覆盖范围与审计)。
 
 ## 开发
 
@@ -60,4 +53,6 @@ npm run check
 npm test
 ```
 
-检查使用模拟网络和临时数据，不消耗真实模型额度。没有新增运行时依赖，使用 Pi 原生 TypeScript 加载器、Node 标准库和原生 HTML。
+测试使用模拟分类和隔离的临时存储，不消耗模型额度。[完整技术参考](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md) · [English reference](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md)
+
+MIT 许可证。

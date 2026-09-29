@@ -1,74 +1,49 @@
 # Pi Jev Route
 
-Automatic **subagent** model selection for Pi, with an on-demand local HTML console. The main session's model and thinking level are never changed.
+![Pi Jev Route — The right model. The same main session.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
+
+Route eligible Pi subagent tasks to a suitable model with Jev—without changing the main session’s model or thinking level.
 
 ```sh
 pi install npm:pi-subagents@0.69.0
 pi install npm:@each1024/pi-jev-route
 ```
 
-Already using `pi-subagents`? Keep your installation. Tested with Pi **0.85.1**, pi-subagents **0.69.0**, and Node **22.22.3**. Requires Node **22.18+**. Run `/reload`. Routing is on by default; the session shows a `pi-jev-route` mark when it selects a model. Open `/pi-jev-route` only for settings and logs. [中文说明](README.zh-CN.md)
+Already using `pi-subagents`? Keep it; the extension uses its native launcher. Requires Node **22.18+** and Pi **0.85.1+**. After installation, run `/reload`. Routing is enabled by default. [简体中文](README.zh-CN.md)
 
-## How it works
+## Get started
 
-1. The main agent clarifies the task, investigates risks, and supplies a bounded task contract.
-2. It discovers agent capabilities using `subagent({action:"list", capabilities:true})`.
-3. For a structured native Pi `subagent({agent, task})` call, Jev selects a model from **`settings.json` `enabledModels`** using your model descriptions. Omit the per-run `model` to allow routing.
-4. The extension writes a validated `provider/model:thinking` override immediately before execution. The existing subagent extension still owns launching, parallelism, tools, permissions, budgets, and results.
+On first use in an interactive local Pi session, the extension opens its English welcome page in your browser. Choose **Open settings** to review the available models and routing options. To open the welcome page again, run `/pi-jev-route welcome`.
 
-Independent work should be dispatched in parallel to save time. Ordinary work prefers a configured lightweight model. Styling uses the current main model with low thinking, provided that model is enabled in the allowed scope. Non-reasoning models use `off`. Explicit per-run and agent-profile pins are kept only when they resolve to an allowed `enabledModels` entry; out-of-list names (including other providers or the plugin name `pi-jev-route`) are ignored and Jev selects from the list.
+The `/pi-jev-route` command opens the local settings and audit console. The first-run welcome flow also starts its loopback server to show the welcome page; installing the npm package alone does not open a browser. The server shuts down after inactivity and does not create a public listener or tunnel.
 
-The agent receives concise coordination guidance, not a replacement launcher. Nothing creates extra agents merely to increase their count. Acceptance defaults to compilation unless the task explicitly requires additional checks.
+![Route with intent. Your models. Your scope.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-routing.png)
 
-## Local HTML console
+## How routing works
 
-`/pi-jev-route` opens a loopback-only, token-protected settings page:
+- The main session clarifies the request, investigates risks, delegates bounded work, makes key decisions, and summarizes results.
+- Jev selects from configured `enabledModels` for eligible structured native Pi subagent calls. The existing subagent extension owns launching, parallelism, tools, permissions, budgets, and results.
+- Independent tasks may run in parallel. Ordinary work generally prefers a lightweight model; styling uses the current main model with low thinking when allowed. The main model and thinking level never change.
 
-- Lists every `settings.json` `enabledModels` entry and autosaves each change.
-- Chinese / English toggle; later log text follows the selected language. There is no notes field.
-- Fallback model, styling policy, and advanced routing options.
+The extension covers model-originated structured calls to a single native Pi subagent. It does not globally intercept workflow scripts, `/run`, schedules, other extensions’ direct delegation, or external CLI/job runners. Nested routing is not guaranteed. [Coverage and audit details](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md#coverage-and-audit).
 
-Descriptions for temporarily unavailable models are retained. A settings change during classification blocks that attempt. Concurrent settings edits are rejected rather than silently overwritten.
+![Stay in control. Local settings. Clear decisions.](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-control.png)
 
-```text
-/pi-jev-route          Open HTML settings and logs
-/pi-jev-route last     Show the newest persistent audit record
-/pi-jev-route log <id-or-unique-prefix>  Show one unambiguous audit record
-/pi-jev-route status   Show enabled state and coverage
-/pi-jev-route on       Enable child routing
-/pi-jev-route off      Disable child routing; keep all current models
-```
+## Local console
 
-The server is started only on demand, binds to `127.0.0.1`, and closes after five idle minutes or a session transition. No external scripts, fonts, or assets are loaded. On remote/headless Pi, the HTML command must be opened in a local interactive session; no public listener or tunnel is created.
+The console lists configured models and exposes routing, fallback, and audit settings. Changes are saved locally. It uses no external scripts, fonts, or assets. Remote or headless sessions do not automatically open a local browser.
 
-## Coverage — important
+## Privacy and credentials
 
-**Covered:** model-originated, structured single-native-Pi-child `subagent` calls, including `async:true`, after the agent capability list has identified the runner.
+Classification sends the child task, agent name, candidate model IDs/descriptions, and routing instructions to TypeSafe—not the main conversation, system prompt, tool results, or reasoning. It may incur separate charges. Credentials are reused from `TYPESAFE_API_KEY` or `~/.config/typesafe/api_key`; logs store a task hash, not task text or credentials. Keep secrets out of model descriptions. Full privacy details are in the [technical reference](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md#privacy-credentials-and-failures).
 
-**Not intercepted:** workflow scripts/templates and their inner `runs.run/all`, `/run`, schedules, other extensions' direct RPC/delegation, and external CLI/job runners. Nested routing depends on whether the child loads this extension and is **not guaranteed**. Unsupported model-facing workflow/remote dispatch calls are logged as skipped and left unchanged; direct `/run` and other bypasses do not produce a routing log. This is not a global launch-policy enforcement layer.
+## Failures and audit
 
-The public capability-list response is cached for the current session. Refresh it after changing agent definitions externally. In-session create/update/delete results invalidate the cache. An unknown native/external runner is not guessed: the launch is blocked with instructions to list capabilities first. This discovery check cannot prevent a trusted agent configuration from changing after listing.
+Each eligible dispatch makes at most one request, with a five-second default deadline and no retries. Missing credentials, timeouts, invalid responses, sensitive or oversized input, and low confidence use an allowed fallback; otherwise dispatch is blocked. Credential detection is not a complete secret scanner.
 
-## Credentials, privacy, and failures
+Async acceptance is not completion; audit records and run IDs do not independently prove execution or correctness. See [audit details and query commands](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md#coverage-and-audit).
 
-Jev uses TypeSafe directly. The existing credential source is reused:
-
-1. `TYPESAFE_API_KEY`
-2. `~/.config/typesafe/api_key`
-
-No Gateway account or new credential file is needed. Keys are never returned to the HTML page or stored in logs. Keep the key file private, for example mode `600`.
-
-Classification sends the **child task, agent name, candidate model IDs/descriptions, and your routing instructions** to TypeSafe. It does not send the main conversation, system prompt, tool results, or reasoning. Classification is separately billed. Obvious credential-like inputs are skipped; this lexical check is **not** a complete privacy or secret scanner. Oversized tasks/requests are skipped, not silently truncated.
-
-No classification occurs for ordinary main-session turns, management calls, in-list explicit model pins, or recognized external runners. Each eligible dispatch makes at most one request; the default deadline is five seconds and there are no retries. Timeout, missing credentials, malformed responses, sensitive input, or low confidence fall back to the configured allowed model, an allowed `low` alias, or the allowed main model, in that order. With no safe fallback, dispatch is blocked. A human-first decision blocks dispatch. A low classification confidence is not a measured probability that coding will succeed.
-
-Settings and audit records live in `jev-route.sqlite` under Pi's agent directory, honoring `PI_CODING_AGENT_DIR`, using owner-only permissions. Logs retain a task hash, not task text or the raw classifier response. Notes and model descriptions are user-authored local data; do not put credentials in them. No automatic log deletion is performed. On Node 22, the built-in SQLite module may emit an experimental warning.
-
-Async acceptance is recorded as **accepted**, not completion. Foreground executor configuration is reported only when supplied in the tool result. There is no background polling or invented completion evidence. Terminal audit marks show a short reason, requested model and audit ID, and explicitly do not imply execution. Structured compatible audit fields record a reason code, routing duration, candidate IDs, fallback source and limited rule snapshot; transport failures are distinguished without storing raw errors, response bodies, task text or credentials. `last` and `log` query the durable SQLite records; prefixes that match multiple records are rejected. Async/run identifiers are retained when returned, but do not confirm completion or the actual model. The original subagent result is preserved and receives an appended model-visible receipt with the route ID, requested/reported model, outcome, execution evidence state, and query command. The read-only `jev_route_history` tool lists recent current-session records or fetches one ID; `allSessions` explicitly opts into cross-session search. It does not store task or result text. Exit code zero is evidence of tool-reported execution completion, not independent verification of the work.
-
-## Migration and development
-
-This package replaces the earlier local experiment that offered main-session `auto`/`shadow` routing. Remove that old extension from Pi's discovery directory before installing this package; do not load both under `/pi-jev-route`. It does not replace or modify Pi Jev Reply, which independently reviews completed replies.
+## Development
 
 ```sh
 npm ci --ignore-scripts
@@ -76,6 +51,6 @@ npm run check
 npm test
 ```
 
-Checks use mocked classification and isolated temporary storage; they do not consume model credits. The package contains TypeScript source for Pi's native extension loader and plain HTML, with no additional runtime dependencies beyond the Pi host.
+Tests use mocked classification and isolated temporary storage; they do not consume model credits. [Full technical reference](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md) · [技术参考](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md)
 
-MIT.
+MIT License.

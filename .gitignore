@@ -4,3 +4,8 @@ node_modules/
 .npmrc
 .DS_Store
 AGENTS.md
+
+# Publishable product reference documents
+!docs/
+!docs/reference.md
+!docs/reference.zh-CN.md

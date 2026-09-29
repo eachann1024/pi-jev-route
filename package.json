@@ -31,7 +31,9 @@
     "web",
     "README.md",
     "README.zh-CN.md",
-    "LICENSE"
+    "LICENSE",
+    "docs/reference.md",
+    "docs/reference.zh-CN.md"
   ],
   "scripts": {
     "check": "tsc --noEmit",
