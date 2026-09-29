@@ -1,7 +1,7 @@
 # Pi Jev Route
 
-<img width="1304" height="340" alt="image" src="https://github.com/user-attachments/assets/39e849eb-c079-418d-81a6-b9324d9cc697" />
 
+https://github.com/user-attachments/assets/7f6656ac-094e-48bc-b9a5-34f9de008631
 
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
