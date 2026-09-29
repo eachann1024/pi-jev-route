@@ -35,7 +35,7 @@
   ],
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "node test/core.mjs && node test/integration.mjs",
+    "test": "node test/core.mjs && node test/audit.mjs && node test/observability.mjs && node test/integration.mjs",
     "prepublishOnly": "npm run check && npm test"
   },
   "peerDependencies": {

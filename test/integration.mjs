@@ -31,13 +31,15 @@ const ctx = { mode: 'tui', model: main, scopedModels: [{ model: low }, { model: 
   sessionManager: { getSessionId: () => 'fixture-session' },
   ui: { notify: message => notices.push(message) }, signal: undefined,
 };
-const pi = { on: (event, handler) => hooks.set(event, handler), registerCommand: (name, command) => commands.set(name, command),
+const tools = new Map();
+const pi = { on: (event, handler) => hooks.set(event, handler), registerCommand: (name, command) => commands.set(name, command), registerTool: tool => tools.set(tool.name, tool),
   registerEntryRenderer: () => {}, appendEntry: (...entry) => entries.push(entry),
   getAllTools: () => [{ name: 'subagent' }], setModel: () => { throw Error('Must never change parent model'); },
   setThinkingLevel: () => { throw Error('Must never change parent thinking'); },
 };
 extension(pi);
 assert.deepEqual([...commands.keys()], ['pi-jev-route']);
+assert(tools.has('jev_route_history'));
 const emit = (type, event = {}) => hooks.get(type)?.(event, ctx);
 const event = (input, id = randomUUID()) => ({ toolName: 'subagent', toolCallId: id, input });
 
@@ -78,7 +80,7 @@ try {
   assert(!JSON.stringify(db.getLogs()).includes(run.input.task));
   assert(!JSON.stringify(db.getLogs()).includes('test-only-credential'));
   assert.match(JSON.stringify(captured), /bounded formatter/);
-  await emit('tool_result', { toolCallId: run.toolCallId, isError: false, details: { results: [{ model: 'fixture/low:low', thinking: 'low', exitCode: 0 }] } });
+  await emit('tool_result', { toolName: 'subagent', toolCallId: run.toolCallId, input: run.input, content: [], isError: false, details: { results: [{ model: 'fixture/low:low', thinking: 'low', exitCode: 0 }] } });
   assert.equal(db.getLogs()[0].actualModel, 'fixture/low:low');
 
   const explicit = event({ agent: 'worker', task: 'Read a file', model: 'fixture/main:high' });

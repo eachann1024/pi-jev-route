@@ -11,6 +11,8 @@ export type RouteLog = {
   id: string; at: string | number; sessionId: string; toolCallId: string; agent: string; taskHash: string;
   outcome: 'selected' | 'fallback' | 'explicit' | 'blocked' | 'skipped' | 'error'; requestedModel: string;
   reason: string; note: string; confidence?: number; actualModel?: string; actualThinking?: string; actualStatus?: string;
+  audit?: { reasonCode: string; durationMs: number; candidateIds: string[]; fallbackSource: 'configured' | 'low_alias' | 'main' | 'none'; rules?: { styleUseMain: boolean; confidenceThreshold: number } };
+  asyncId?: string; runId?: string; executionState?: 'not_started' | 'accepted' | 'running' | 'completed' | 'failed' | 'unknown'; updatedAt?: string; evidence?: { source: 'tool_result'; exitCode?: number; resultCount?: number };
 };
 const modelId = /^[^\s/]+\/[^\s]+$/u;
 function object(value: unknown): Record<string, unknown> {
@@ -55,12 +57,30 @@ export function parseSettings(value: unknown): Settings {
 }
 function validateLog(value: RouteLog): RouteLog {
   const row = object(value);
-  keys(row, ['id', 'at', 'sessionId', 'toolCallId', 'agent', 'taskHash', 'outcome', 'requestedModel', 'reason', 'note', 'confidence', 'actualModel', 'actualThinking', 'actualStatus']);
+  keys(row, ['id', 'at', 'sessionId', 'toolCallId', 'agent', 'taskHash', 'outcome', 'requestedModel', 'reason', 'note', 'confidence', 'actualModel', 'actualThinking', 'actualStatus', 'audit', 'asyncId', 'runId', 'executionState', 'updatedAt', 'evidence']);
   for (const key of ['id', 'sessionId', 'toolCallId', 'agent', 'taskHash', 'requestedModel', 'reason', 'note'] as const) string(row[key], key === 'note' ? 1000 : 4096);
   if (!value.id || !['selected', 'fallback', 'explicit', 'blocked', 'skipped', 'error'].includes(value.outcome)) throw new TypeError('日志身份或状态无效');
   if (typeof value.at !== 'string' && (typeof value.at !== 'number' || !Number.isFinite(value.at))) throw new TypeError('日志时间无效');
   if (value.confidence !== undefined) range(value.confidence, 0, 1);
   for (const key of ['actualModel', 'actualThinking', 'actualStatus'] as const) if (row[key] !== undefined) string(row[key], 1000);
+  if (row.asyncId !== undefined) string(row.asyncId, 256);
+  if (row.runId !== undefined) string(row.runId, 256);
+  if (row.executionState !== undefined && !['not_started', 'accepted', 'running', 'completed', 'failed', 'unknown'].includes(String(row.executionState))) throw new TypeError('执行状态无效');
+  if (row.updatedAt !== undefined) string(row.updatedAt, 64);
+  if (row.evidence !== undefined) { const evidence = object(row.evidence); keys(evidence, ['source', 'exitCode', 'resultCount']); if (evidence.source !== 'tool_result') throw new TypeError('证据来源无效'); if (evidence.exitCode !== undefined && (typeof evidence.exitCode !== 'number' || !Number.isInteger(evidence.exitCode))) throw new TypeError('退出码无效'); if (evidence.resultCount !== undefined && (!Number.isInteger(evidence.resultCount) || Number(evidence.resultCount) < 0 || Number(evidence.resultCount) > 100)) throw new TypeError('结果数量无效'); }
+  if (row.audit !== undefined) {
+    const audit = object(row.audit);
+    keys(audit, ['reasonCode', 'durationMs', 'candidateIds', 'fallbackSource', 'rules']);
+    string(audit.reasonCode, 64); range(audit.durationMs, 0, 3600000);
+    if (!Number.isInteger(audit.durationMs) || !Array.isArray(audit.candidateIds) || audit.candidateIds.length > 200) throw new TypeError('审计字段无效');
+    for (const candidate of audit.candidateIds) id(candidate);
+    if (!['configured', 'low_alias', 'main', 'none'].includes(String(audit.fallbackSource))) throw new TypeError('回退来源无效');
+    if (audit.rules !== undefined) {
+      const rules = object(audit.rules); keys(rules, ['styleUseMain', 'confidenceThreshold']);
+      if (typeof rules.styleUseMain !== 'boolean') throw new TypeError('规则快照无效');
+      range(rules.confidenceThreshold, 0, 1);
+    }
+  }
   return value;
 }
 function stored<T>(json: string, validate: (value: any) => T): T {
@@ -103,6 +123,18 @@ export function openStore(path: string) {
   }
   return {
     getSettings, getLog,
+    findLog(reference: string): { log?: RouteLog; ambiguous: boolean } {
+      string(reference, 256);
+      const exact = getLog(reference);
+      if (exact) return { log: exact, ambiguous: false };
+      const rows = db.prepare('SELECT json FROM logs WHERE substr(id, 1, length(?))=? LIMIT 2').all(reference, reference);
+      if (rows.length > 1) return { ambiguous: true };
+      return { log: rows[0] ? stored(rows[0].json as string, validateLog) : undefined, ambiguous: false };
+    },
+    getLatestLog(): RouteLog | undefined {
+      const row = db.prepare('SELECT json FROM logs ORDER BY rowid DESC LIMIT 1').get();
+      return row ? stored(row.json as string, validateLog) : undefined;
+    },
     saveSettings(value: unknown, expectedJson?: string) {
       const settings = parseSettings(value);
       if (expectedJson !== undefined) string(expectedJson, 300000);
@@ -112,10 +144,9 @@ export function openStore(path: string) {
       });
     },
     addLog(log: RouteLog) { db.prepare('INSERT INTO logs(id,json) VALUES(?,?)').run(validateLog(log).id, JSON.stringify(log)); },
-    updateLog(id: string, patch: { actualModel?: string; actualThinking?: string; actualStatus?: string }) {
+    updateLog(id: string, patch: Partial<Pick<RouteLog, 'actualModel' | 'actualThinking' | 'actualStatus' | 'asyncId' | 'runId' | 'executionState' | 'updatedAt' | 'evidence'>>) {
       const valid = object(patch);
-      keys(valid, ['actualModel', 'actualThinking', 'actualStatus']);
-      for (const value of Object.values(valid)) string(value, 1000);
+      keys(valid, ['actualModel', 'actualThinking', 'actualStatus', 'asyncId', 'runId', 'executionState', 'updatedAt', 'evidence']);
       edit(id, log => ({ ...log, ...patch }));
     },
     setNote(id: string, note: string, expectedNote?: string) {
@@ -125,6 +156,20 @@ export function openStore(path: string) {
         if (expectedNote !== undefined && log.note !== expectedNote) throw new Error('conflict');
         return { ...log, note };
       });
+    },
+    getLogsBySession(sessionId: string, limit = 20): RouteLog[] {
+      string(sessionId, 256);
+      range(limit, 1, 100);
+      if (!Number.isInteger(limit)) throw new TypeError('条数必须是整数');
+      return db.prepare("SELECT json FROM logs WHERE json_extract(json, '$.sessionId')=? ORDER BY rowid DESC LIMIT ?")
+        .all(sessionId, limit).map(row => stored(row.json as string, validateLog));
+    },
+    findLogById(id: string, sessionId?: string): RouteLog | undefined {
+      string(id, 4096);
+      if (sessionId === undefined) return getLog(id);
+      string(sessionId, 256);
+      const row = db.prepare("SELECT json FROM logs WHERE id=? AND json_extract(json, '$.sessionId')=?").get(id, sessionId);
+      return row ? stored(row.json as string, validateLog) : undefined;
     },
     getLogs(limit = 100): RouteLog[] {
       range(limit, 1, 1000);

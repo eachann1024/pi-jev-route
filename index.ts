@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { getAgentDir, type CustomEntry, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
+import { Type } from "@earendil-works/pi-ai";
 import { copy, ROUTING_PROMPT } from "./lib/copy.ts";
 import { defaultModelDescription } from "./lib/describe.ts";
 import { loadPiEnabledModels, modelId, resolveEnabledIds, resolveListedModel, splitModelRef } from "./lib/enabled.ts";
@@ -30,8 +31,9 @@ export function scopedCandidates(ctx: ExtensionContext, settings: Settings) {
 }
 
 function badgeText(record: RouteLog) {
-  const model = record.requestedModel ? ` ${record.requestedModel}` : "";
-  return `${record.agent} · ${record.outcome}${model}`;
+  const model = record.requestedModel ? ` · 请求 ${record.requestedModel}` : " · 请求模型未知";
+  const auditId = record.id.slice(0, 8);
+  return `${record.agent} · ${record.outcome} · ${clean(record.reason, 100)}${model} · #${auditId}（不代表实际执行）`;
 }
 function mark(pi: ExtensionAPI, ctx: ExtensionContext | undefined, record: RouteLog) {
   if (!ctx || ctx.mode !== "tui" || record.outcome === "skipped") return;
@@ -43,6 +45,31 @@ function status(ctx: ExtensionContext | undefined, text?: string) {
 }
 
 export default function jevRoute(pi: ExtensionAPI) {
+  pi.registerTool({
+    name: 'jev_route_history',
+    label: 'Jev route history',
+    description: 'Read local Jev routing records. List recent records from the current session by default, or retrieve one record by ID. Set allSessions=true only when cross-session history is needed. Does not expose task text or tool payloads. Async lifecycle is not followed; use returned runId/asyncId with subagent status where supported.',
+    parameters: Type.Object({
+      id: Type.Optional(Type.String({ description: 'Exact route record ID' })),
+      limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 50 })),
+      allSessions: Type.Optional(Type.Boolean()),
+    }),
+    async execute(_callId, params, _signal, _update, ctx) {
+      try {
+        const db = ensureStore();
+        const sessionId = ctx.sessionManager.getSessionId();
+        if (params.id) {
+          const record = db.findLogById(params.id, params.allSessions ? undefined : sessionId);
+          return { content: [{ type: 'text', text: JSON.stringify({ record: record ?? null }) }], details: undefined };
+        }
+        const limit = Math.min(params.limit ?? 20, 50);
+        const records = params.allSessions ? db.getLogs(limit) : db.getLogsBySession(sessionId, limit);
+        return { content: [{ type: 'text', text: JSON.stringify({ records }) }], details: undefined };
+      } catch (error) {
+        throw new Error(`Route history query failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+      }
+    },
+  });
   pi.registerEntryRenderer<Badge>(PLUGIN, (entry: CustomEntry<Badge>, _, theme) => {
     const detail = entry.data?.text ? ` ${entry.data.text}` : "";
     return new Text(theme.fg("accent", PLUGIN) + theme.fg("dim", detail), 0, 0);
@@ -102,7 +129,7 @@ export default function jevRoute(pi: ExtensionAPI) {
     const task = typeof input.task === "string" ? input.task : "";
     const record: RouteLog = { id, at: new Date().toISOString(), sessionId: ctx.sessionManager.getSessionId(),
       toolCallId: event.toolCallId, agent, taskHash: createHash("sha256").update(task).digest("hex").slice(0, 16),
-      outcome: "skipped", requestedModel: clean(input.model), reason: "", note: "" };
+      outcome: "skipped", requestedModel: clean(input.model), reason: "", note: "", executionState: 'unknown' };
     const log = () => { ensureStore().addLog(record); pending.set(event.toolCallId, id); mark(pi, ctx, record); };
     try {
       if (["workflow", "workflowScript", "workflowScriptPath", "tasks", "chain", "parallel"].some(key => input[key] !== undefined) || input.machine !== undefined) {
@@ -152,6 +179,7 @@ export default function jevRoute(pi: ExtensionAPI) {
       record.outcome = decision.outcome;
       record.reason = ignoredExplicit ? text.ignoredExplicit(ignoredExplicit, decision.reason) : decision.reason;
       record.confidence = decision.confidence;
+      record.audit = decision.audit;
       if (decision.outcome === "blocked" || !decision.model || !decision.thinking) {
         log(); return { block: true, reason: text.notDispatched(record.reason) };
       }
@@ -181,24 +209,49 @@ export default function jevRoute(pi: ExtensionAPI) {
         }
       } else if (["create", "update", "delete"].includes(String(event.input.action))) agents.clear();
     }
+    if (event.toolName !== 'subagent') return;
     const id = pending.get(event.toolCallId);
     if (!id || !store) return;
     pending.delete(event.toolCallId);
     const details = event.details as { results?: { model?: unknown; thinking?: unknown; exitCode?: unknown }[]; asyncId?: unknown; runId?: unknown } | undefined;
     const result = Array.isArray(details?.results) && details.results.length === 1 ? details.results[0] : undefined;
+    let receipt = '';
     try {
       const text = copy(settings().locale);
+      const prior = store.getLog(id);
+      const executionState = prior?.outcome === 'blocked' ? 'not_started' : event.isError ? 'failed' : result ? typeof result.exitCode !== 'number' ? 'unknown' : result.exitCode === 0 ? 'completed' : 'failed' : details?.asyncId ? 'accepted' : 'unknown';
       store.updateLog(id, { ...(typeof result?.model === "string" ? { actualModel: clean(result.model) } : {}),
         ...(typeof result?.thinking === "string" ? { actualThinking: clean(result.thinking, 20) } : {}),
-        actualStatus: event.isError ? text.toolError : result ? (result.exitCode === 0 ? text.agentDone : text.agentFailed) : details?.asyncId ? text.asyncAccepted : text.resultMissing });
-    } catch { context?.ui.notify("Jev 无法更新执行报告，已保留原判定日志。", "warning"); }
+        ...(typeof details?.asyncId === "string" ? { asyncId: clean(details.asyncId) } : {}),
+        ...(typeof details?.runId === "string" ? { runId: clean(details.runId) } : {}), executionState,
+        updatedAt: new Date().toISOString(), ...(result ? { evidence: { source: 'tool_result' as const, ...(typeof result.exitCode === 'number' ? { exitCode: result.exitCode } : {}), resultCount: 1 } } : {}),
+        actualStatus: event.isError ? text.toolError : result ? executionState === 'completed' ? text.agentDone : executionState === 'failed' ? text.agentFailed : '运行状态未知；请查询 subagent 状态' : details?.asyncId ? `${text.asyncAccepted}；asyncId=${clean(details.asyncId)}` : text.resultMissing });
+      const updated = store.getLog(id)!;
+      receipt = `\n\n[Jev route receipt] routeId=${id}; requested=${updated.requestedModel || '(none)'}; actual=${updated.actualModel || 'unknown'}${updated.actualThinking ? `/${updated.actualThinking}` : ''}; outcome=${updated.outcome}; reason=${updated.reason || '(none)'}; execution=${executionState}; query=jev_route_history(id=${id})${updated.asyncId ? `; asyncId=${updated.asyncId}` : ''}${updated.runId ? `; runId=${updated.runId}` : ''}${updated.asyncId || updated.runId ? ' (check subagent status)' : ''}`;
+    } catch { context?.ui.notify("Jev 路由执行记录更新失败；结果未持久化。", "warning"); receipt = `\n\n[Jev route receipt] routeId=${id}; execution=unknown; persistence=FAILED; query=jev_route_history(id=${id})`; }
+    return { content: [...(event.content ?? []), { type: 'text', text: receipt }], details: event.details, isError: event.isError, usage: event.usage };
   });
 
   const command = {
-    description: "打开 Pi Jev Route 设置与日志；或 on / off / status",
+    description: "设置、状态或查询持久路由审计日志",
     handler: async (args: string, ctx: ExtensionContext) => {
       context = ctx;
       const action = args.trim() || "settings";
+      const describeLog = (record: RouteLog) => {
+        const model = record.requestedModel || "未知（未记录请求模型）";
+        const execution = record.actualStatus || "未收到执行结果；实际执行情况未知";
+        return `审计 ${record.id} · ${record.at}\n代理：${record.agent}\n做了什么：${record.reason}\n为什么：${record.audit?.reasonCode ?? "旧日志或该路径没有结构化原因码"}${record.audit ? `；耗时 ${record.audit.durationMs}ms；回退来源 ${record.audit.fallbackSource}` : ""}\n请求模型：${model}（不等于已确认的实际模型）\n执行状态：${execution}${record.actualModel ? `；报告模型 ${record.actualModel}` : "；实际模型未确认"}${record.asyncId ? `；后台任务 ${record.asyncId}` : ""}${record.runId ? `；运行 ${record.runId}` : ""}`;
+      };
+      if (action === "last") {
+        const latest = ensureStore().getLatestLog();
+        ctx.ui.notify(latest ? describeLog(latest) : "尚无路由审计记录。", "info"); return;
+      }
+      if (action.startsWith("log ")) {
+        const reference = action.slice(4).trim();
+        if (!reference) { ctx.ui.notify("用法：/pi-jev-route log <完整编号或唯一前缀>", "info"); return; }
+        const found = ensureStore().findLog(reference);
+        ctx.ui.notify(found.ambiguous ? "审计编号前缀有歧义，请提供更长前缀。" : found.log ? describeLog(found.log) : "未找到该审计记录。", "info"); return;
+      }
       if (action === "status") {
         ctx.ui.notify(settingsError || `Jev 子代理路由${settings().enabled ? "已启用" : "已关闭"}；主会话模型不变。${COVERAGE}`, "info"); return;
       }
@@ -207,7 +260,7 @@ export default function jevRoute(pi: ExtensionAPI) {
         catch { ctx.ui.notify("设置未保存，原文件未覆盖。", "error"); }
         return;
       }
-      if (action !== "settings") { ctx.ui.notify("用法：/pi-jev-route [settings|on|off|status]；不再提供主会话 auto/shadow 模式。", "info"); return; }
+      if (action !== "settings") { ctx.ui.notify("用法：/pi-jev-route [settings|on|off|status|last|log <id或唯一前缀>]", "info"); return; }
       if (ctx.mode !== "tui") { ctx.ui.notify("请在本机交互式 Pi 中打开 HTML 设置。", "warning"); return; }
       try {
         ensureStore();

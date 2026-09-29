@@ -25,6 +25,8 @@ pi install npm:@each1024/pi-jev-route
 
 ```text
 /pi-jev-route          打开 HTML 设置和日志
+/pi-jev-route last     查看最新持久审计记录
+/pi-jev-route log <编号或唯一前缀>  查询单条审计记录
 /pi-jev-route status   查看状态与覆盖范围
 /pi-jev-route on       开启子代理路由
 /pi-jev-route off      关闭子代理路由，不改当前模型
@@ -48,7 +50,7 @@ pi install npm:@each1024/pi-jev-route
 
 缺 Key、请求失败、超时、无效回答或低置信度依次回退到：允许范围内的配置回退模型、`low` 模型、当前主模型；均不可用就阻止派发。需要用户决定时也阻止。路由不授予额外操作权限，置信度不是任务成功率。
 
-设置和日志保存在 Pi agent 目录的 `jev-route.sqlite`，支持 `PI_CODING_AGENT_DIR`，使用仅所有者可读写权限。日志只保留任务 hash，不保存原文、密钥或分类原始响应；手写备注与模型说明也不要填入凭据。不会自动删除日志。Node 22 的内置 SQLite 可能显示实验性提示。
+设置和日志保存在 Pi agent 目录的 `jev-route.sqlite`，支持 `PI_CODING_AGENT_DIR`，使用仅所有者可读写权限。日志只保留任务 hash，不保存原文、密钥或分类原始响应；手写备注与模型说明也不要填入凭据。不会自动删除日志。Node 22 的内置 SQLite 可能显示实验性提示。终端审计标记显示简短原因、请求模型和审计编号，并明确表示这不代表任务已执行。兼容的结构化审计字段记录原因码、路由耗时、候选模型 ID、回退来源和有限规则快照；区分 HTTP、超时、网络和无效响应，但不记录原始错误、响应正文、任务全文或密钥。`last` 和 `log` 查询 SQLite 持久记录，匹配多个记录的前缀会被拒绝。工具结果返回的 async/run ID 会留存，但不代表完成，也不确认实际模型。原始 subagent 结果保持原样并追加模型可见回执，包含路由编号、请求/报告模型、路由结果、执行证据状态和查询方式。只读工具 `jev_route_history` 默认列出当前会话最近记录或按 ID 查询；仅显式设置 `allSessions` 才跨会话。不会保存任务或结果全文。exit code 0 仅说明工具报告执行完成，不是对工作质量的独立验证。
 
 ## 开发
 

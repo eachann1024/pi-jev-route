@@ -32,6 +32,8 @@ Descriptions for temporarily unavailable models are retained. A settings change 
 
 ```text
 /pi-jev-route          Open HTML settings and logs
+/pi-jev-route last     Show the newest persistent audit record
+/pi-jev-route log <id-or-unique-prefix>  Show one unambiguous audit record
 /pi-jev-route status   Show enabled state and coverage
 /pi-jev-route on       Enable child routing
 /pi-jev-route off      Disable child routing; keep all current models
@@ -62,7 +64,7 @@ No classification occurs for ordinary main-session turns, management calls, in-l
 
 Settings and audit records live in `jev-route.sqlite` under Pi's agent directory, honoring `PI_CODING_AGENT_DIR`, using owner-only permissions. Logs retain a task hash, not task text or the raw classifier response. Notes and model descriptions are user-authored local data; do not put credentials in them. No automatic log deletion is performed. On Node 22, the built-in SQLite module may emit an experimental warning.
 
-Async acceptance is recorded as **accepted**, not completion. Foreground executor configuration is reported only when supplied in the tool result. There is no background polling or invented completion evidence.
+Async acceptance is recorded as **accepted**, not completion. Foreground executor configuration is reported only when supplied in the tool result. There is no background polling or invented completion evidence. Terminal audit marks show a short reason, requested model and audit ID, and explicitly do not imply execution. Structured compatible audit fields record a reason code, routing duration, candidate IDs, fallback source and limited rule snapshot; transport failures are distinguished without storing raw errors, response bodies, task text or credentials. `last` and `log` query the durable SQLite records; prefixes that match multiple records are rejected. Async/run identifiers are retained when returned, but do not confirm completion or the actual model. The original subagent result is preserved and receives an appended model-visible receipt with the route ID, requested/reported model, outcome, execution evidence state, and query command. The read-only `jev_route_history` tool lists recent current-session records or fetches one ID; `allSessions` explicitly opts into cross-session search. It does not store task or result text. Exit code zero is evidence of tool-reported execution completion, not independent verification of the work.
 
 ## Migration and development
 
