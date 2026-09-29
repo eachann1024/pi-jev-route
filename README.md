@@ -1,8 +1,7 @@
 # Pi Jev Route
 
-[![Watch the 32-second guide: three steps to let sub-agents pick their own model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/docs/media/guide-en.webp)](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-en.mp4)
+<img width="1304" height="340" alt="image" src="https://github.com/user-attachments/assets/39e849eb-c079-418d-81a6-b9324d9cc697" />
 
-▶ 32-second guide: [English](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-en.mp4) · [简体中文](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4)
 
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
