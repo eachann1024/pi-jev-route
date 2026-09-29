@@ -5,7 +5,7 @@ import { copy } from './copy.ts';
 import type { Settings } from './store.ts';
 
 export type Candidate = { id: string; name: string; reasoning: boolean; description: string; enabled: boolean };
-export type RouteAudit = { reasonCode: string; durationMs: number; candidateIds: string[]; fallbackSource: 'configured' | 'low_alias' | 'main' | 'none'; rules?: { styleUseMain: boolean; confidenceThreshold: number } };
+export type RouteAudit = { reasonCode: string; durationMs: number; candidateIds: string[]; fallbackSource: 'configured' | 'low_alias' | 'main' | 'none'; httpStatus?: number; timeoutMs: number; rules: { styleUseMain: boolean; confidenceThreshold: number } };
 export type RouteDecision = { model?: string; thinking?: 'off' | 'low' | 'high'; kind: 'routine' | 'style' | 'complex' | 'human'; outcome: 'selected' | 'fallback' | 'blocked'; confidence?: number; reason: string; audit: RouteAudit };
 // ponytail: 仅筛查明显凭据；更广的数据防泄漏需接入专用扫描器。
 const sensitive = /(?:\bBearer\s+\S+|\b(?:password|passwd|api[_ -]?key|access[_ -]?token|token|secret)[\\'"]*\s*[:=]\s*\S+|(?:密码|密钥|令牌)[\\'"]*\s*[:：=]\s*\S+|\b(?:sk-|gh[pousr]_|github_pat_|npm_|AKIA)[A-Za-z0-9_-]{8,}|-----BEGIN [^-]*PRIVATE KEY-----|https?:\/\/[^\s/@]+:[^\s/@]+@)/iu;
@@ -24,17 +24,17 @@ export async function routeTask(task: string, agent: string, candidates: Candida
   const text = copy(settings.locale);
   const started = Date.now();
   const allowed = candidates.filter(model => model.enabled && settings.models[model.id]?.enabled !== false);
-  const audit = (reasonCode: string, fallbackSource: RouteAudit['fallbackSource'] = 'none'): RouteAudit => ({ reasonCode, durationMs: Math.max(0, Date.now() - started), candidateIds: allowed.map(model => model.id), fallbackSource, rules: { styleUseMain: settings.styleUseMain, confidenceThreshold: settings.confidenceThreshold } });
+  const audit = (reasonCode: string, fallbackSource: RouteAudit['fallbackSource'] = 'none', httpStatus?: number): RouteAudit => ({ reasonCode, durationMs: Math.max(0, Date.now() - started), candidateIds: allowed.map(model => model.id), fallbackSource, ...(httpStatus === undefined ? {} : { httpStatus }), timeoutMs: settings.timeoutMs, rules: { styleUseMain: settings.styleUseMain, confidenceThreshold: settings.confidenceThreshold } });
   if (allowed.some(model => typeof model.id !== 'string' || model.id.length > 256 || !/^[^\s/]+\/[^\s]+$/u.test(model.id) || typeof model.name !== 'string' || typeof model.description !== 'string' || typeof model.reasoning !== 'boolean') || new Set(allowed.map(model => model.id)).size !== allowed.length) throw new TypeError('候选模型无效');
-  const fallback = (reason: string, reasonCode: string, certainty?: number): RouteDecision => {
+  const fallback = (reason: string, reasonCode: string, certainty?: number, httpStatus?: number): RouteDecision => {
     signal.throwIfAborted();
     const configured = allowed.find(model => model.id === settings.fallbackModel);
     const low = allowed.find(model => model.id.split('/').at(-1)?.toLowerCase() === 'low');
     const main = allowed.find(model => model.id === mainModel?.id);
     const model = configured ?? low ?? main;
     const source = configured ? 'configured' : low ? 'low_alias' : main ? 'main' : 'none';
-    return model ? { model: model.id, thinking: model.reasoning ? 'low' : 'off', kind: 'routine', outcome: 'fallback', ...(certainty === undefined ? {} : { confidence: certainty }), reason, audit: audit(reasonCode, source) }
-      : { kind: 'routine', outcome: 'blocked', ...(certainty === undefined ? {} : { confidence: certainty }), reason: text.noFallback(reason), audit: audit(reasonCode, 'none') };
+    return model ? { model: model.id, thinking: model.reasoning ? 'low' : 'off', kind: 'routine', outcome: 'fallback', ...(certainty === undefined ? {} : { confidence: certainty }), reason, audit: audit(reasonCode, source, httpStatus) }
+      : { kind: 'routine', outcome: 'blocked', ...(certainty === undefined ? {} : { confidence: certainty }), reason: text.noFallback(reason), audit: audit(reasonCode, 'none', httpStatus) };
   };
   if (!allowed.length) return fallback(text.noCandidates, 'no_candidates');
   if (!settings.enabled) return fallback(text.routingOff, 'routing_disabled');
@@ -87,6 +87,6 @@ export async function routeTask(task: string, agent: string, candidates: Candida
   } catch (error) {
     signal.throwIfAborted();
     const code = timeout.signal.aborted ? 'timeout' : (error as { auditCode?: string })?.auditCode ?? (responseReceived ? 'invalid_response' : 'network_error');
-    return fallback(code === 'timeout' ? text.timeout : text.requestFailed, code);
+    return fallback(code === 'timeout' ? text.timeout : text.requestFailed, code, undefined, (error as { status?: number })?.status);
   } finally { clearTimeout(timer); combined.removeEventListener('abort', onAbort); }
 }

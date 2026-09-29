@@ -21,6 +21,8 @@ try {
   assert.equal(http.audit.fallbackSource, 'configured');
   assert.equal(http.audit.candidateIds.length, 2);
   assert.equal(http.audit.rules.confidenceThreshold, settings.confidenceThreshold);
+  assert.equal(http.audit.httpStatus, 503);
+  assert.equal(http.audit.timeoutMs, settings.timeoutMs);
   assert.equal(http.model, 'p/low');
 
   globalThis.fetch = async () => { throw new TypeError('network detail must not persist'); };

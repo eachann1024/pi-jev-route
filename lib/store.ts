@@ -11,7 +11,7 @@ export type RouteLog = {
   id: string; at: string | number; sessionId: string; toolCallId: string; agent: string; taskHash: string;
   outcome: 'selected' | 'fallback' | 'explicit' | 'blocked' | 'skipped' | 'error'; requestedModel: string;
   reason: string; note: string; confidence?: number; actualModel?: string; actualThinking?: string; actualStatus?: string;
-  audit?: { reasonCode: string; durationMs: number; candidateIds: string[]; fallbackSource: 'configured' | 'low_alias' | 'main' | 'none'; rules?: { styleUseMain: boolean; confidenceThreshold: number } };
+  audit?: { reasonCode: string; durationMs: number; candidateIds: string[]; fallbackSource: 'configured' | 'low_alias' | 'main' | 'none'; httpStatus?: number; timeoutMs: number; rules: { styleUseMain: boolean; confidenceThreshold: number } };
   asyncId?: string; runId?: string; executionState?: 'not_started' | 'accepted' | 'running' | 'completed' | 'failed' | 'unknown'; updatedAt?: string; evidence?: { source: 'tool_result'; exitCode?: number; resultCount?: number };
 };
 const modelId = /^[^\s/]+\/[^\s]+$/u;
@@ -70,8 +70,10 @@ function validateLog(value: RouteLog): RouteLog {
   if (row.evidence !== undefined) { const evidence = object(row.evidence); keys(evidence, ['source', 'exitCode', 'resultCount']); if (evidence.source !== 'tool_result') throw new TypeError('证据来源无效'); if (evidence.exitCode !== undefined && (typeof evidence.exitCode !== 'number' || !Number.isInteger(evidence.exitCode))) throw new TypeError('退出码无效'); if (evidence.resultCount !== undefined && (!Number.isInteger(evidence.resultCount) || Number(evidence.resultCount) < 0 || Number(evidence.resultCount) > 100)) throw new TypeError('结果数量无效'); }
   if (row.audit !== undefined) {
     const audit = object(row.audit);
-    keys(audit, ['reasonCode', 'durationMs', 'candidateIds', 'fallbackSource', 'rules']);
+    keys(audit, ['reasonCode', 'durationMs', 'candidateIds', 'fallbackSource', 'httpStatus', 'timeoutMs', 'rules']);
     string(audit.reasonCode, 64); range(audit.durationMs, 0, 3600000);
+    if (audit.timeoutMs !== undefined) { range(audit.timeoutMs, 1000, 30000); if (!Number.isInteger(audit.timeoutMs)) throw new TypeError('超时快照无效'); }
+    if (audit.httpStatus !== undefined) { range(audit.httpStatus, 100, 599); if (!Number.isInteger(audit.httpStatus)) throw new TypeError('HTTP 状态无效'); }
     if (!Number.isInteger(audit.durationMs) || !Array.isArray(audit.candidateIds) || audit.candidateIds.length > 200) throw new TypeError('审计字段无效');
     for (const candidate of audit.candidateIds) id(candidate);
     if (!['configured', 'low_alias', 'main', 'none'].includes(String(audit.fallbackSource))) throw new TypeError('回退来源无效');
