@@ -13,8 +13,8 @@ import { routeTask, type Candidate } from "./lib/router.ts";
 
 const COVERAGE = "自动覆盖模型发起的结构化 subagent 单任务（含 async）。workflow、/run、定时任务、其他扩展直接派发和子代理内部派发不保证覆盖；未覆盖的工具工作流会记为跳过。";
 const PLUGIN = "pi-jev-route";
-type Badge = { text: string };
-const clean = (value: unknown, max = 256) => typeof value === "string" ? value.replace(/[\u0000-\u001f]/g, " ").slice(0, max) : "";
+type Badge = { text?: string; summary?: string };
+const clean = (value: unknown, max = 256) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "";
 
 export function scopedCandidates(ctx: ExtensionContext, settings: Settings) {
   const available = new Map(ctx.modelRegistry.getAvailable().map(model => [modelId(model), model]));
@@ -30,14 +30,41 @@ export function scopedCandidates(ctx: ExtensionContext, settings: Settings) {
   });
 }
 
-function badgeText(record: RouteLog) {
-  const model = record.requestedModel ? ` · 请求 ${record.requestedModel}` : " · 请求模型未知";
-  const auditId = record.id.slice(0, 8);
-  return `${record.agent} · ${record.outcome} · ${clean(record.reason, 100)}${model} · #${auditId}（不代表实际执行）`;
+function localAgentName(agent: string, locale: "zh" | "en") {
+  const name = clean(agent, 80);
+  const names: Record<string, [string, string]> = {
+    scout: ["侦察", "Scout"], planner: ["规划", "Planner"], coder: ["编码", "Coder"],
+    reviewer: ["审查", "Reviewer"], researcher: ["研究", "Researcher"],
+    worker: ["执行", "Worker"], subagent: ["子代理", "Subagent"],
+  };
+  return names[name.toLowerCase()]?.[locale === "en" ? 1 : 0] ?? (name || (locale === "en" ? "Agent" : "代理"));
 }
-function mark(pi: ExtensionAPI, ctx: ExtensionContext | undefined, record: RouteLog) {
+function displayModel(raw: string) {
+  const { token } = splitModelRef(raw);
+  const cleaned = clean(token, 256);
+  if (!cleaned) return "";
+  const parts = cleaned.split(/[\\/]/u).filter(Boolean);
+  return clean(parts.at(-1) || cleaned, 80);
+}
+function badgeText(record: RouteLog, locale: "zh" | "en") {
+  const agent = localAgentName(record.agent, locale);
+  const model = displayModel(record.requestedModel);
+  if (locale === "en") {
+    if (record.outcome === "blocked") return `${agent}: Not started — ${clean(record.reason, 70)}`;
+    if (!model) return `${agent}: Model not recorded`;
+    if (record.outcome === "explicit") return `${agent}: Selected ${model} (requested)`;
+    if (record.outcome === "fallback") return `${agent}: Selected ${model} (backup)`;
+    return `${agent}: Selected ${model}`;
+  }
+  if (record.outcome === "blocked") return `${agent}：未启动，${clean(record.reason, 70)}`;
+  if (!model) return `${agent}：未记录模型`;
+  if (record.outcome === "explicit") return `${agent}：已选 ${model}（指定）`;
+  if (record.outcome === "fallback") return `${agent}：已选 ${model}（备用）`;
+  return `${agent}：已选 ${model}`;
+}
+function mark(pi: ExtensionAPI, ctx: ExtensionContext | undefined, record: RouteLog, locale: "zh" | "en") {
   if (!ctx || ctx.mode !== "tui" || record.outcome === "skipped") return;
-  try { pi.appendEntry<Badge>(PLUGIN, { text: badgeText(record) }); }
+  try { pi.appendEntry<Badge>(PLUGIN, { summary: badgeText(record, locale) }); }
   catch { /* 会话条目失败不影响派发 */ }
 }
 function status(ctx: ExtensionContext | undefined, text?: string) {
@@ -71,8 +98,8 @@ export default function jevRoute(pi: ExtensionAPI) {
     },
   });
   pi.registerEntryRenderer<Badge>(PLUGIN, (entry: CustomEntry<Badge>, _, theme) => {
-    const detail = entry.data?.text ? ` ${entry.data.text}` : "";
-    return new Text(theme.fg("accent", PLUGIN) + theme.fg("dim", detail), 0, 0);
+    const detail = entry.data?.summary ?? entry.data?.text ?? "";
+    return new Text(theme.fg("dim", detail), 0, 0);
   });
   let store: ReturnType<typeof openStore> | undefined;
   let context: ExtensionContext | undefined;
@@ -171,7 +198,7 @@ export default function jevRoute(pi: ExtensionAPI) {
     const record: RouteLog = { id, at: new Date().toISOString(), sessionId: ctx.sessionManager.getSessionId(),
       toolCallId: event.toolCallId, agent, taskHash: createHash("sha256").update(task).digest("hex").slice(0, 16),
       outcome: "skipped", requestedModel: clean(input.model), reason: "", note: "", executionState: 'unknown' };
-    const log = () => { ensureStore().addLog(record); pending.set(event.toolCallId, id); mark(pi, ctx, record); };
+    const log = () => { ensureStore().addLog(record); pending.set(event.toolCallId, id); mark(pi, ctx, record, settings().locale); };
     try {
       if (["workflow", "workflowScript", "workflowScriptPath", "tasks", "chain", "parallel"].some(key => input[key] !== undefined) || input.machine !== undefined) {
         record.reason = text.workflowSkip; log(); return;
