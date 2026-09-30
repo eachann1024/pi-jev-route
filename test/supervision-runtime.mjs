@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { DEFAULT_SUPERVISION, constrainSupervisionDecision } from '../lib/supervision-policy.ts';
 import { createSupervisionRuntime } from '../lib/supervision-runtime.ts';
 
-function fixture({ action = 'continue', proof = false, persisted = new Map(), main = false, cap = 3, locale = 'en', scores } = {}) {
+function fixture({ action = 'continue', proof = false, persisted = new Map(), main = false, cap = 3, locale = 'en', scores, judgeWait } = {}) {
   let now = 100_000, counter = 0, judgments = 0;
   let config = { ...DEFAULT_SUPERVISION, monitorMain: main, monitorChildren: !main, pollMs: 1000, idleMs: 1000, recheckMs: 1000, maxChecksPerTask: cap };
   const events = [], calls = [], messages = [], requests = [], timers = new Set(), hooks = new Map();
@@ -18,7 +18,7 @@ function fixture({ action = 'continue', proof = false, persisted = new Map(), ma
     constrain: (task, seen, settings, decision) => constrainSupervisionDecision(task, action === 'recover' ? { ...seen, consecutiveFailures: 3 } : seen, settings, decision),
     now: () => now, randomId: () => `event-${++counter}`,
     setTimer: (fn, ms) => { const t = { fn, ms }; timers.add(t); return t; }, clearTimer: t => timers.delete(t),
-    judge: async (_observation, task) => { assert(task.checks < config.maxChecksPerTask, 'judge receives state before consuming this check'); judgments++; return { action, reasonCode: 'test_evidence', evidenceIds: [0], ...(scores ? { scores } : {}) }; },
+    judge: async (_observation, task, _settings, signal) => { assert(task.checks < config.maxChecksPerTask, 'judge receives state before consuming this check'); judgments++; if (judgeWait) await judgeWait(signal); return { action, reasonCode: 'test_evidence', evidenceIds: [0], ...(scores ? { scores } : {}) }; },
     rpc: { request: async req => {
       calls.push(req.method); requests.push(req);
       if (req.method === 'ping') return { success: true, data: { capabilities: { status: true, interrupt: true, resume: true, steer: true }, session: { sessionId: 's' } } };
@@ -276,3 +276,81 @@ await childSupervisor.tick();
 assert.equal(childSupervisor.task().budgetPaused, false, 'needs_attention alone is not a supervisor wait');
 assert.equal(childSupervisor.judgments(), 0);
 childSupervisor.runtime.dispose();
+
+const unmonitoredMain = fixture({ main: true });
+unmonitoredMain.config.softBudgetMs = 1000; unmonitoredMain.config.maxTaskMs = 2000;
+await unmonitoredMain.emit('session_start');
+await unmonitoredMain.emit('input', { text: 'turn off main observation', source: 'interactive' });
+unmonitoredMain.config.monitorMain = false;
+unmonitoredMain.runtime.settingsChanged();
+const timingKeys = ['lastObservedAt', 'budgetPaused', 'pausedMs', 'softBudgetNotified', 'deadlineNotified', 'lastFeedbackAt', 'observationGraceUntil'];
+const timingState = () => Object.fromEntries(timingKeys.map(key => [key, unmonitoredMain.task()[key]]));
+const beforeTiming = timingState(), beforeNotices = unmonitoredMain.notices.length, beforeEvents = unmonitoredMain.events.length;
+unmonitoredMain.advance(5000);
+await unmonitoredMain.emit('tool_call', { toolName: 'contact_supervisor', toolCallId: 'off-ask', input: { reason: 'need_decision' } });
+await unmonitoredMain.emit('ui_prompt_start');
+unmonitoredMain.advance(5000);
+await unmonitoredMain.emit('ui_prompt_end');
+await unmonitoredMain.emit('tool_execution_end', { toolName: 'contact_supervisor', toolCallId: 'off-ask', isError: false, result: {} });
+assert.deepEqual(timingState(), beforeTiming, 'disabled main observation does not mutate budget or timing');
+assert.equal(unmonitoredMain.notices.length, beforeNotices, 'disabled main observation produces no notices');
+assert.equal(unmonitoredMain.events.length, beforeEvents, 'disabled main observation produces no timing audit events');
+unmonitoredMain.config.monitorMain = true;
+unmonitoredMain.runtime.settingsChanged();
+await unmonitoredMain.emit('tool_call', { toolName: 'contact_supervisor', toolCallId: 'on-ask', input: { reason: 'need_decision' } });
+assert.equal(unmonitoredMain.task().budgetPaused, true, 're-enabled main observation still pauses for supervisor');
+assert(unmonitoredMain.notices.length > beforeNotices, 're-enabled main observation still sends feedback');
+unmonitoredMain.runtime.dispose();
+
+for (const command of ['/stop', '/jev-supervision off']) {
+  const childOnly = fixture({ action: 'correct', scores: { alignment: 0, progress: 1, constraints: 1 } });
+  await childOnly.emit('session_start'); await childOnly.tick();
+  assert(childOnly.task(), 'child task exists without main observation');
+  await childOnly.emit('input', { text: command, source: 'extension' });
+  assert(!childOnly.task().autoInterventionBlocked, 'extension text does not authorize global cancellation');
+  await childOnly.emit('input', { text: command, source: 'interactive' });
+  assert.equal(childOnly.task().autoInterventionBlocked, true);
+  assert.equal(childOnly.task().userStopped === true, command === '/stop');
+  const beforeCalls = childOnly.calls.length, beforeJudgments = childOnly.judgments();
+  for (let i = 0; i < 3; i++) await childOnly.tick();
+  assert.equal(childOnly.judgments(), beforeJudgments, 'cancelled child receives no new judgments');
+  assert(!childOnly.calls.slice(beforeCalls).some(method => ['steer', 'resume', 'interrupt'].includes(method)), 'cancelled child chain receives no intervention');
+  childOnly.runtime.dispose();
+}
+
+for (const command of ['/stop', '/jev-supervision off']) {
+  let release, reviewSignal;
+  const blocked = fixture({ action: 'correct', scores: { alignment: 0, progress: 1, constraints: 1 }, judgeWait: signal => {
+    reviewSignal = signal; return new Promise(resolve => { release = resolve; });
+  } });
+  await blocked.emit('session_start'); await blocked.tick();
+  const inFlight = blocked.tick();
+  await new Promise(resolve => setImmediate(resolve));
+  assert(reviewSignal, 'review is actually in flight');
+  await blocked.emit('input', { text: command, source: 'interactive' });
+  assert.equal(reviewSignal.aborted, true, 'global cancellation aborts in-flight review');
+  release(); await inFlight;
+  assert.equal(blocked.task().autoInterventionBlocked, true);
+  assert.equal(blocked.task().userStopped === true, command === '/stop');
+  assert(!blocked.calls.some(method => ['steer', 'resume', 'interrupt'].includes(method)), 'late judgment cannot dispatch intervention');
+  const count = blocked.judgments(); await blocked.tick();
+  assert.equal(blocked.judgments(), count);
+  blocked.runtime.dispose();
+}
+
+for (const reservedModel of ['', 'disabled/reserved']) {
+  for (const action of ['correct', 'recover']) {
+    const original = fixture({ action, proof: true, scores: { alignment: 0, progress: 1, constraints: 1 } });
+    original.config.correctionModel = reservedModel; original.config.correctionThinking = 'off';
+    await original.emit('session_start'); await original.tick(); await original.tick();
+    const dispatched = original.requests.find(request => request.method === (action === 'correct' ? 'steer' : 'resume'));
+    assert(dispatched, 'original-agent correction/recovery does not require an enabled reserved takeover model');
+    assert.equal(dispatched.params.model, undefined); assert.equal(dispatched.params.thinking, undefined);
+    original.runtime.dispose();
+  }
+}
+const unsupportedTakeover = fixture({ action: 'takeover', proof: true });
+unsupportedTakeover.config.correctionModel = 'disabled/reserved';
+await unsupportedTakeover.emit('session_start'); await unsupportedTakeover.tick(); await unsupportedTakeover.tick();
+assert(!unsupportedTakeover.calls.includes('resume'), 'takeover remains unavailable and fails closed');
+unsupportedTakeover.runtime.dispose();

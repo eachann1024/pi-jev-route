@@ -104,6 +104,11 @@ assert.equal(capture.body.model, 'jev-latest');
 assert.equal(capture.body.questions.action.type, 'choice');
 assert.equal(capture.body.questions.alignment.type, 'score');
 assert.equal(capture.authorization.includes('policy-test-key'), true);
+assert.equal(Object.hasOwn(capture.body.state, 'consecutiveFailures'), false, 'unknown child failures are omitted rather than fabricated as zero');
+const zeroCapture = {};
+const zeroFailures = observation({ ...reviewEvidence, target: 'main', consecutiveFailures: 0 });
+await judgeSupervision(zeroFailures, task(zeroFailures, { lastReviewedToolCount: 1, lastReviewedVersion: 1 }), correctSettings, new AbortController().signal, { fetch: fakeFetch(jev('correct'), zeroCapture) });
+assert.equal(zeroCapture.body.state.consecutiveFailures, 0, 'observed main failure count retains real zero');
 
 const lowScore = await judgeSupervision(reviewEvidence, task(reviewEvidence, { lastReviewedToolCount: 1, lastReviewedVersion: 1 }), correctSettings, new AbortController().signal, { fetch: fakeFetch(jev('correct', [0, 0, 0.4])) });
 assert.equal(lowScore.action, 'correct');

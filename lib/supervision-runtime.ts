@@ -393,7 +393,7 @@ export function createSupervisionRuntime(pi: ExtensionAPI, options: SupervisionR
     const fresh = () => !disposed && !controller.signal.aborted && tasks.get(live.task.id) === live && live.generation === startedGeneration && currentSession() === live.ownerSessionId && !live.task.userStopped && !live.task.autoInterventionBlocked;
     const allowedNow = () => {
       const latest = currentSettings();
-      return fresh() && activeElapsedMs(live.task, now()) < latest.maxTaskMs && latest.enabled && (!latest.correctionModel || options.allowedModels(ctx).includes(latest.correctionModel)) ? latest : undefined;
+      return fresh() && activeElapsedMs(live.task, now()) < latest.maxTaskMs && latest.enabled && (observation.target === 'main' ? latest.monitorMain : latest.monitorChildren) && (action !== 'takeover' || !latest.correctionModel || options.allowedModels(ctx).includes(latest.correctionModel)) ? latest : undefined;
     };
     const gate = () => { if (!allowedNow()) throw new Error('stale'); };
     const withholdCorrection = () => {
@@ -507,6 +507,7 @@ export function createSupervisionRuntime(pi: ExtensionAPI, options: SupervisionR
 
   const observeTiming = (live: LiveTask, seen: SupervisionObservation, ctx: ExtensionContext) => {
     const task = live.task, config = currentSettings();
+    if (!config.enabled || sessionDisabled || live.ownerSessionId !== currentSession() || task.sessionId !== currentSession() || (task.target === 'main' ? !config.monitorMain : !config.monitorChildren)) return;
     const previous = task.lastObservedAt;
     const delta = previous === undefined ? 0 : Math.max(0, seen.now - previous);
     const gapLimit = Math.max(30_000, config.pollMs * 3);
@@ -720,13 +721,13 @@ export function createSupervisionRuntime(pi: ExtensionAPI, options: SupervisionR
   subscribe(pi.on('session_before_tree', () => cancelAll('session_tree', true)));
   subscribe(pi.on('input', (event, ctx) => {
     touchMain(ctx);
-    if (!main) return;
+    if (event.source === 'extension') return;
     const command = event.text.trim();
     if (command === '/stop' || command === '/jev-supervision off') {
       if (command !== '/stop') sessionDisabled = true;
       cancelAll(command === '/stop' ? 'user_stop' : 'user_disabled', true); return;
     }
-    if (event.source === 'extension') return;
+    if (!main) return;
     let live = mainTaskId ? tasks.get(mainTaskId) : undefined;
     const goal = text(event.text, 160);
     if (!goal) return;
@@ -788,7 +789,7 @@ export function createSupervisionRuntime(pi: ExtensionAPI, options: SupervisionR
   }));
   const syncMainTiming = (ctx: ExtensionContext) => {
     const live = mainTaskId ? tasks.get(mainTaskId) : undefined;
-    if (main && live && main.goal && !live.task.userStopped && currentSettings().enabled && !sessionDisabled) observeTiming(live, mainObservation(live.task, main, now()), ctx);
+    if (main && live && main.goal && live.ownerSessionId === currentSession() && live.task.sessionId === currentSession() && !live.task.userStopped && currentSettings().enabled && currentSettings().monitorMain && !sessionDisabled) observeTiming(live, mainObservation(live.task, main, now()), ctx);
   };
   subscribe(pi.on('ui_prompt_start', (_event, ctx) => { touchMain(ctx); if (main) { main.waitingForUser = true; main.lastActivityAt = now(); syncMainTiming(ctx); } }));
   subscribe(pi.on('ui_prompt_end', (_event, ctx) => { touchMain(ctx); if (main) { main.waitingForUser = false; syncMainTiming(ctx); } }));

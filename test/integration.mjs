@@ -137,8 +137,11 @@ try {
   db.saveSettings({ ...db.getSettings(), enabled: true });
 
   globalThis.fetch = nativeFetch;
-  ui = await startWeb(() => ({ settings: db.getSettings(), models: [], logs: db.getLogs() }),
-    (value, previous) => db.saveSettings(value, previous), (id, note, previous) => db.setNote(id, note, previous));
+  let addCalls = 0; const addedModels = [];
+  ui = await startWeb(() => ({ settings: db.getSettings(), models: addedModels, logs: db.getLogs() }),
+    (value, previous) => db.saveSettings(value, previous), (id, note, previous) => db.setNote(id, note, previous), 300000, undefined, undefined, id => {
+      addCalls++; addedModels.push({ id }); return { tokens: [id], added: true };
+    });
   const url = new URL(ui.url), authorization = `Bearer ${url.hash.slice(1)}`, origin = url.origin;
   welcomeUi = await startWeb(() => ({ settings: db.getSettings(), models: [], logs: db.getLogs() }), (value, previous) => db.saveSettings(value, previous), (id, note, previous) => db.setNote(id, note, previous), 300000, '<button>Welcome</button>', () => db.setMetadata('onboarding-complete', 'yes'));
   const welcomeBase = new URL(welcomeUi.url); welcomeBase.pathname = '/welcome';
@@ -177,6 +180,16 @@ try {
   assert.equal((await put({ ...snapshot.settings, timeoutMs: -1 })).status, 400);
   assert.equal((await put({ ...snapshot.settings, timeoutMs: 6000 })).status, 200);
   assert.equal((await put(snapshot.settings)).status, 409);
+  const postModel = version => nativeFetch(origin + '/models', { method: 'POST', headers: { authorization, 'Content-Type': 'application/json', ...(version ? { 'If-Match': version } : {}) }, body: JSON.stringify({ id: 'fixture/other' }) });
+  assert.equal((await postModel(etag)).status, 409, 'A old settings version cannot add models after B saves');
+  assert.equal((await postModel()).status, 409, 'missing version cannot add models');
+  assert.equal(addCalls, 0, 'conflict is checked before addModel side effect');
+  assert.equal((await put(snapshot.settings)).status, 409, 'failed add does not legitimize A stale draft');
+  assert.equal(db.getSettings().timeoutMs, 6000, 'B setting survives A requests');
+  const fresh = await nativeFetch(origin + '/settings', { headers: { authorization } });
+  assert.equal((await postModel(fresh.headers.get('etag'))).status, 200);
+  assert.equal(addCalls, 1); assert.deepEqual(addedModels, [{ id: 'fixture/other' }]);
+
   const log = db.getLogs()[0];
   const patch = (note, previousNote) => nativeFetch(origin + '/notes/' + log.id, { method: 'PATCH', headers: { authorization, 'Content-Type': 'application/json' }, body: JSON.stringify({ note, previousNote }) });
   assert.equal((await patch('Reviewed the routing decision.', '')).status, 200);
@@ -225,6 +238,80 @@ try {
   assert.doesNotMatch(html, /保存备注/);
   assert.match(html, /id="add-model"/);
   assert.match(script, /addCatalogModel/);
+  // Execute the actual add handler: conflict must preserve the old version and draft.
+  const addSource = script.slice(script.indexOf('    async function addCatalogModel'), script.indexOf("    $('settings-form').addEventListener('submit'"));
+  const { createContext, runInContext } = await import('node:vm');
+  let postCalls = 0, putCalls = 0, uiStatus;
+  const oldSnapshot = { settings: { instructions: 'A draft', models: { 'fixture/main': { description: 'exact draft description' } } } };
+  const uiContext = createContext({ token: 'fixture', snapshot: oldSnapshot, etag: 'old-version', busy: false, conflicted: true, AbortSignal,
+    lock(value) { uiContext.busy = value; }, status(key) { uiStatus = key; }, catalogOptions() {}, update() {},
+    dirty: () => true, queueSave() { if (!uiContext.conflicted) putCalls++; },
+    fetch: async (_url, options) => { postCalls++; assert.equal(options.headers['If-Match'], 'old-version'); return { ok: false, status: 409 }; }
+  });
+  runInContext(addSource, uiContext);
+  await runInContext("addCatalogModel('fixture/other')", uiContext);
+  assert.equal(postCalls, 0, 'already conflicted UI cannot POST');
+  uiContext.conflicted = false;
+  await runInContext("addCatalogModel('fixture/other')", uiContext);
+  assert.equal(postCalls, 1); assert.equal(putCalls, 0);
+  assert.equal(uiContext.snapshot, oldSnapshot); assert.equal(uiContext.etag, 'old-version');
+  assert.equal(uiContext.snapshot.settings.instructions, 'A draft');
+  assert.equal(uiContext.snapshot.settings.models['fixture/main'].description, 'exact draft description');
+  assert.equal(uiContext.conflicted, true); assert.equal(uiStatus, 'conflict');
+  const draftSettings = { instructions: 'unsaved draft', models: { 'fixture/main': { enabled: true, description: 'exact original model draft' } } };
+  const freshData = { settings: { instructions: 'saved', models: { 'fixture/other': { enabled: true, description: 'new model' } } }, models: [{ id: 'fixture/other' }] };
+  for (const raw of ['', '12.345']) {
+    let populated; const input = { value: raw };
+    uiContext.conflicted = false;
+    uiContext.etag = 'fresh-version';
+    uiContext.numericFields = [{ id: 'poll-ms' }]; uiContext.$ = () => input;
+    uiContext.payload = () => draftSettings;
+    uiContext.populate = data => { populated = data; input.value = 'server-default'; };
+    uiContext.showSaved = () => {}; uiContext.applyChrome = () => {};
+    uiContext.fetch = async (_url, options) => {
+      assert.equal(options.headers['If-Match'], 'fresh-version');
+      return { ok: true, json: async () => freshData, headers: { get: () => 'next-version' } };
+    };
+    await runInContext("addCatalogModel('fixture/other')", uiContext);
+    assert.equal(input.value, raw, 'same-version add preserves blank or fractional numeric draft');
+    assert.equal(populated.settings.instructions, draftSettings.instructions);
+    assert.equal(populated.settings.models['fixture/main'].description, 'exact original model draft');
+    assert.equal(populated.settings.models['fixture/other'].description, 'new model');
+    assert.equal(uiContext.etag, 'next-version'); assert.equal(uiContext.snapshot, freshData);
+  }
+
+  assert.match(script.slice(script.indexOf('function queueSave'), script.indexOf('async function persist')), /conflicted/);
+  for (const id of ['correction-model', 'correction-thinking', 'allow-takeover']) assert.match(html, new RegExp(`<(?:select|input) id="${id}"[^>]*disabled`));
+  assert.match(dictionaries.en.takeoverHint, /original agent and model/);
+  assert.match(dictionaries.zh.takeoverHint, /所选配置暂不生效/);
+  const controls = new Map();
+  const control = id => {
+    if (!controls.has(id)) controls.set(id, { value: '', disabled: false, checked: false, classList: { toggle() {} }, replaceChildren() {}, append() {}, setCustomValidity(value) { this.error = value; } });
+    return controls.get(id);
+  };
+  control('correction-model').value = 'disabled/reserved'; control('correction-thinking').value = 'off'; control('allow-takeover').checked = true;
+  control('fields').querySelectorAll = () => [...controls.values()];
+  const selectLocks = {};
+  const select = name => ({ rebuild(fn) { fn(); }, lock(value) { selectLocks[name] = value; } });
+  const reservedContext = createContext({ $: control, snapshot: { settings: { supervision: {} }, defaults: {}, defaultModels: {} }, token: 'fixture', savingDraft: false,
+    modelInputs: new Map(), modelSelect: select('model'), thinkingSelect: select('thinking'), fallbackSelect: select('fallback'), addSelect: select('add'), filterSelect: select('filter'),
+    supervisionFields: [], Option: function() {}, L: () => dictionaries.en, supported: () => true });
+  const correctionSource = script.slice(script.indexOf('    function correctionOptions'), script.indexOf('    function validate'));
+  const lockSource = script.slice(script.indexOf('    function setDisabled'), script.indexOf('    function update()'));
+  runInContext(correctionSource + lockSource, reservedContext);
+  runInContext('correctionOptions(); lock(true); lock(false);', reservedContext);
+  assert.equal(selectLocks.model, true); assert.equal(selectLocks.thinking, true);
+  for (const id of ['correction-model', 'correction-thinking', 'allow-takeover']) assert.equal(control(id).disabled, true, 'reserved controls stay disabled after unlock');
+  assert.equal(control('correction-model').value, 'disabled/reserved'); assert.equal(control('correction-thinking').value, 'off'); assert.equal(control('allow-takeover').checked, true);
+  assert.equal(control('correction-model').error, '', 'reserved unavailable model does not block saving');
+  assert.equal(control('correction-model-hint').hidden, false, 'actual contract is always visible');
+  const payloadSource = script.slice(script.indexOf('    function payload()'), script.indexOf('    // Raw input'));
+  reservedContext.numericFields = [{ id: 'confidence' }, { id: 'timeout' }]; reservedContext.readNumber = () => 0; reservedContext.modelBase = {}; reservedContext.locale = 'en';
+  runInContext(payloadSource, reservedContext);
+  const reservedPayload = runInContext('payload().supervision', reservedContext);
+  assert.equal(reservedPayload.correctionModel, 'disabled/reserved'); assert.equal(reservedPayload.correctionThinking, 'off'); assert.equal(reservedPayload.allowMainTakeover, true);
+
+
   assert.doesNotMatch(html, /id="model-search"/);
   const jsPath = join(root, 'ui.js'); await writeFile(jsPath, script);
   const checked = spawnSync(process.execPath, ['--check', jsPath], { encoding: 'utf8' }); assert.equal(checked.status, 0, checked.stderr);

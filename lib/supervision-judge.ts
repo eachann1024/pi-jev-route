@@ -77,7 +77,7 @@ export async function judgeSupervision(observation: SupervisionObservation, task
     waitingForSupervisor: observation.waitingForSupervisor ?? false,
     progressKnown: observation.progressKnown ?? 'unknown',
     noProgressMs: Math.max(0, observation.now - observation.lastProgressAt),
-    consecutiveFailures: observation.consecutiveFailures ?? 0,
+    consecutiveFailures: observation.consecutiveFailures,
     failureTool: observation.failureTool,
     activeToolMs: observation.activeToolStartedAt === undefined ? undefined : Math.max(0, observation.now - observation.activeToolStartedAt),
     pausedMs: task.pausedMs ?? 0,

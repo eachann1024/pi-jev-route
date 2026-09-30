@@ -62,6 +62,7 @@ export async function startWeb(
         if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError();
         const record = value as Record<string, unknown>;
         if (Object.keys(record).length !== 1 || typeof record.id !== "string" || !/^[^\s/]+\/[^\s]+$/u.test(record.id)) throw new TypeError();
+        if (req.headers["if-match"] !== etag(snapshot().settings)) { res.writeHead(409).end("设置已变化，请刷新后重试。未覆盖当前设置。"); return; }
         addModel(record.id);
       } else if (req.method === "PUT" || req.method === "PATCH") {
         if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") { res.writeHead(415).end(); return; }

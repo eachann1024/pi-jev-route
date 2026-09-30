@@ -90,6 +90,22 @@ try {
   store.saveSupervisionTask({ ...task('hold-pending', 'hold'), phase: 'completed', pendingAction: 'recover' });
   assert.throws(() => store.saveSupervisionTask(task('hold-extra', 'hold')), /capacity/);
   assert.equal(store.getSupervisionTasks('hold').some(item => item.id === 'hold-pending' && item.pendingAction === 'recover'), true);
+  const intent = { action: 'recover', reasonCode: 'unknown_result', generation: 1, at: 10 };
+  for (const phase of ['blocked', 'completed', 'stopped']) {
+    const session = 'intent-' + phase;
+    for (let index = 0; index < 50; index++) store.saveSupervisionTask({ ...task(`${session}-${index}`, session), phase, pendingIntent: intent });
+    assert.throws(() => store.saveSupervisionTask(task(session + '-extra', session)), /capacity/);
+    const held = store.getSupervisionTasks(session);
+    assert.equal(held.length, 50);
+    assert(held.every(item => item.pendingAction === undefined && JSON.stringify(item.pendingIntent) === JSON.stringify(intent)), 'intent-only terminal records retain the uncertain-action evidence');
+  }
+  store.close(); store = openStore(legacyPath);
+  for (const phase of ['blocked', 'completed', 'stopped']) {
+    const held = store.getSupervisionTasks('intent-' + phase);
+    assert.equal(held.length, 50);
+    assert(held.every(item => JSON.stringify(item.pendingIntent) === JSON.stringify(intent)), 'intent evidence survives reopening store');
+  }
+
   assert.throws(() => store.saveSupervisionTask(task('overflow')), /capacity/);
   assert.equal(store.getSupervisionTasks('s').some(item => item.id === 'overflow'), false);
   store.saveSupervisionTask({ ...task('live-0', 's', 4), pendingAction: 'correct', checks: 3 });

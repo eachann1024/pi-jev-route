@@ -331,7 +331,7 @@ export function openStore(path: string) {
           .map(row => ({ id: String(row.id), task: stored(row.json as string, validateTask) }));
         const known = rows.some(row => row.id === valid.id);
         const projected = known ? rows.length : rows.length + 1;
-        const removable = rows.filter(row => row.id !== valid.id && !row.task.pendingAction && ['completed', 'stopped', 'blocked'].includes(row.task.phase));
+        const removable = rows.filter(row => row.id !== valid.id && !row.task.pendingAction && !row.task.pendingIntent && ['completed', 'stopped', 'blocked'].includes(row.task.phase));
         const overflow = projected - TASK_LIMIT;
         if (overflow > removable.length) throw new Error('supervision task capacity reached');
         for (const row of removable.slice(0, Math.max(0, overflow))) db.prepare('DELETE FROM supervision_tasks WHERE id=?').run(row.id);
