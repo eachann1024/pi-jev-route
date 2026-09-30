@@ -14,6 +14,11 @@ export async function startWeb(
 ) {
   const html = await readFile(new URL("../web/index.html", import.meta.url));
   const welcomeHtml = onboardingHtml;
+  const assets = new Map(await Promise.all([
+    ["/vendor/slimselect.js", "slimselect.js", "text/javascript; charset=utf-8"],
+    ["/vendor/page-select.js", "page-select.js", "text/javascript; charset=utf-8"],
+    ["/vendor/slimselect.css", "slimselect.css", "text/css; charset=utf-8"],
+  ].map(async ([path, file, type]) => [path, { body: await readFile(new URL("../web/vendor/" + file, import.meta.url)), type }] as const)));
   const token = randomBytes(24).toString("hex");
   let origin = "", closed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -33,9 +38,13 @@ export async function startWeb(
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("Referrer-Policy", "no-referrer");
-    res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
     if (req.headers.host !== origin.slice(7) || (req.headers.origin && req.headers.origin !== origin)) {
       res.writeHead(403).end(); return;
+    }
+    const asset = assets.get(req.url ?? "");
+    if (req.method === "GET" && asset) {
+      res.setHeader("Content-Type", asset.type); res.end(asset.body); return;
     }
     if (req.method === "GET" && (req.url === "/" || (welcomeHtml && req.url === "/welcome"))) {
       res.setHeader("Content-Type", "text/html; charset=utf-8"); res.end(req.url === "/welcome" && welcomeHtml ? welcomeHtml : html); return;

@@ -150,6 +150,18 @@ try {
   const page = await nativeFetch(origin); assert.equal(page.status, 200); assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   assert.equal((await nativeFetch(origin + '/settings')).status, 403);
   assert.equal((await nativeFetch(origin + '/settings', { headers: { authorization, origin: 'https://hostile.invalid' } })).status, 403);
+  for (const [path, type] of [['slimselect.js', 'text/javascript'], ['page-select.js', 'text/javascript'], ['slimselect.css', 'text/css']]) {
+    const asset = await nativeFetch(origin + '/vendor/' + path);
+    assert.equal(asset.status, 200);
+    assert(asset.headers.get('content-type').startsWith(type));
+    assert.match(asset.headers.get('content-security-policy'), /script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'/);
+    assert.match(asset.headers.get('content-security-policy'), /default-src 'none'/);
+    const source = await asset.text(); assert(source.length > 100);
+    if (path.endsWith('.js')) new Function(source);
+    assert.equal((await nativeFetch(origin + '/vendor/' + path, {headers: {Origin: 'https://hostile.invalid'}})).status, 403);
+  }
+  assert.equal((await nativeFetch(origin + '/vendor/LICENSE')).status, 403);
+  assert.equal((await nativeFetch(origin + '/vendor/slimselect.js?other')).status, 403);
   const initial = await nativeFetch(origin + '/settings', { headers: { authorization } });
   const etag = initial.headers.get('etag'), snapshot = await initial.json();
   const put = (body, version = etag) => nativeFetch(origin + '/settings', { method: 'PUT', headers: { authorization, 'Content-Type': 'application/json', 'If-Match': version }, body: JSON.stringify(body) });
