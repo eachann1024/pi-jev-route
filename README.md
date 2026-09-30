@@ -14,8 +14,6 @@ Already using `pi-subagents`? Keep it; the extension uses its native launcher. R
 
 https://github.com/user-attachments/assets/63e5b717-d273-45b4-a6cc-c8d4c53eb1ac
 
-[Watch the guide video (MP4, 6 min)](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-en.mp4)
-
 ## Get started
 
 On first use in an interactive local Pi session, the extension opens its English welcome page in your browser. Choose **Open settings** to review the available models and routing options. To open the welcome page again, run `/pi-jev-route-setting welcome`.
