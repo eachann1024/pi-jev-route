@@ -223,6 +223,8 @@ try {
   assert.match(script, /savedToast/);
   assert.match(script, /headers\['If-Match'\]\s*=\s*etag/);
   assert.doesNotMatch(html, /保存备注/);
+  assert.match(html, /id="add-model"/);
+  assert.match(script, /addCatalogModel/);
   assert.doesNotMatch(html, /id="model-search"/);
   const jsPath = join(root, 'ui.js'); await writeFile(jsPath, script);
   const checked = spawnSync(process.execPath, ['--check', jsPath], { encoding: 'utf8' }); assert.equal(checked.status, 0, checked.stderr);
