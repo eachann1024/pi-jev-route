@@ -8,7 +8,7 @@ Requires Node.js 22.18+ and Pi 0.85.1+. The extension uses Pi's native TypeScrip
 
 ```sh
 pi install npm:pi-subagents@0.69.0
-pi install npm:@each1024/pi-jev-route-setting
+pi install npm:@each1024/pi-jev-route
 ```
 
 Routing is enabled by default. The first local interactive session displays the English welcome page and starts the local console server for its settings link. `/pi-jev-route-setting welcome` opens that welcome page again. `/pi-jev-route-setting` opens the settings and audit console directly. Installing the package does not itself open a browser.
@@ -25,7 +25,7 @@ Explicit per-run or agent-profile model pins are kept only when they resolve to 
 
 On the first use in a local interactive Pi session, the extension presents an English welcome page with an **Open settings** action. `/pi-jev-route-setting welcome` reopens it. The welcome flow starts the loopback console server to serve the page; the server is not started merely by installing the npm package. `/pi-jev-route-setting` opens settings and logs.
 
-The console lists every `settings.json` `enabledModels` entry and autosaves changes. It supports Chinese and English; later log text follows the selected language. It includes fallback model, styling policy, and advanced routing options. There is no notes field. Descriptions for temporarily unavailable models are retained. A settings change during classification blocks that attempt. Concurrent settings edits are rejected rather than silently overwritten.
+The console lists every model matched by `settings.json` `enabledModels` and autosaves changes. A searchable catalog dropdown stays available, including when models are already enabled, and adding a model appends its exact id to that Pi list. It supports Chinese and English; later log text follows the selected language. It includes fallback model, styling policy, and advanced routing options. There is no notes field. Descriptions for temporarily unavailable models are retained. A settings change during classification blocks that attempt. Concurrent settings edits are rejected rather than silently overwritten.
 
 The server binds to `127.0.0.1`, uses a token-protected page, and closes after five idle minutes or a session transition. It loads no external scripts, fonts, or assets. On remote/headless Pi, opening HTML requires a local interactive session; no public listener or tunnel is created.
 
@@ -68,9 +68,19 @@ No classification occurs for ordinary main-session turns, management calls, in-l
 
 Settings and audit records live in `jev-route.sqlite` under Pi's agent directory, honoring `PI_CODING_AGENT_DIR`, using owner-only permissions. Logs retain a task hash, not task text or the raw classifier response. Notes and model descriptions are user-authored local data; do not put credentials in them. No automatic log deletion is performed. On Node 22, the built-in SQLite module may emit an experimental warning.
 
+## Task supervision settings
+
+Supervision shares the routing settings record. New settings and legacy settings without `supervision` default to the unified observation, correction, and bounded recovery flow. An explicitly saved off state stays off. Legacy modes normalize on read; the page no longer offers three modes. Disabling supervision does not stop tasks, and user cancellation is never automatically revived. The corrective model defaults to empty and is not replaced by the parent or fallback model.
+
+The current adapter supports steering the main session and observing/recovering owned native async children with their original model. Recovery requires exit proof for the exact run; an unknown action result durably blocks retries. Automatic main-session recovery and model-changing takeover are unsupported: permission settings do not create executor capability. Three live Pi acceptance sessions remain incomplete; injected tests do not establish real recovery success.
+
+The page reuses the existing autosave and `If-Match` conflict check. Each supervision control describes its mechanism: local polling every five seconds by default, idle and deep-thinking thresholds, review interval or new-tool evidence, handoff wait, and the caps on recoveries, takeovers, interventions, task age, decision time, and checks. Active tools, provider thinking, and explicit waits are not treated as silence. Unknown, foreign, external, nested, and unproven foreground work are shown as coverage gaps; a crashed Pi process is outside coverage.
+
+Supervision tasks and events use separate tables from routing logs. Goals, messages, and evidence are length-limited; credential-like fragments in evidence are redacted. A session may retain 50 tasks. Only finished tasks with no pending action are removed to make room; a full set of active or pending tasks is rejected instead of dropping the live chain. Events keep the newest 200 per session. Routing logs are not deleted or rewritten by this retention. Numeric supervision limits are validated only by the policy parser. The corrective thinking default follows that parser; the page selects high when a saved value is missing. The page shows the current task list and audit timeline when the runtime snapshot supplies `supervision.tasks`, `supervision.events`, and `supervision.coverage`. The extension supplies this snapshot from the active supervision runtime.
+
 ## Development and migration
 
-This package replaces the earlier local experiment that offered main-session `auto`/`shadow` routing. Remove that old extension from Pi's discovery directory before installing this package; do not load both under `/pi-jev-route-setting`. It does not replace or modify Pi Jev Reply, which independently reviews completed replies.
+This package replaces the earlier local experiment that offered main-session `auto`/`shadow` routing. Remove that old extension from Pi's discovery directory before installing this package; do not load both under `/pi-jev-route`. It does not replace or modify Pi Jev Reply, which independently reviews completed replies.
 
 ```sh
 npm ci --ignore-scripts

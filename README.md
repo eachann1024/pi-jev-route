@@ -7,7 +7,7 @@ Route eligible Pi subagent tasks to a suitable model with Jev—without changing
 
 ```sh
 pi install npm:pi-subagents@0.69.0
-pi install npm:@each1024/pi-jev-route-setting
+pi install npm:@each1024/pi-jev-route
 ```
 
 Already using `pi-subagents`? Keep it; the extension uses its native launcher. Requires Node **22.18+** and Pi **0.85.1+**. After installation, run `/reload`. Routing is enabled by default. [简体中文](README.zh-CN.md)
@@ -36,7 +36,7 @@ The extension covers model-originated structured calls to a single native Pi sub
 
 **Model controls and routing audit.** Choose allowed models and fallback policy; inspect selections and fallback events. Feature diagram, not a UI screenshot; audit does not prove task completion.
 
-The console lists configured models and exposes routing, fallback, and audit settings. Changes are saved locally. It uses no external scripts, fonts, or assets. Remote or headless sessions do not automatically open a local browser.
+The console lists configured models and exposes routing, fallback, and audit settings. Choose English or Simplified Chinese at the top of the page. Edits save automatically, and “Saved” appears at the top right. Leaving the page does not ask for confirmation. Restoring defaults keeps the interface language and saves automatically; refreshing the audit log preserves edits that are still being saved. Conflicting edits require an explicit settings reload. It uses no external scripts, fonts, or assets. Remote or headless sessions do not automatically open a local browser.
 
 ## Privacy and credentials
 
@@ -56,6 +56,6 @@ npm run check
 npm test
 ```
 
-Tests use mocked classification and isolated temporary storage; they do not consume model credits. [Full technical reference](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md) · [技术参考](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md)
+Tests use mocked classification and isolated temporary storage; they do not consume model credits. [Full technical reference](docs/reference.md)
 
 MIT License.

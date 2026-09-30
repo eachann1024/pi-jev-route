@@ -1,8 +1,8 @@
 # Pi Jev Route
 
-[![观看 32 秒引导视频：三步，让子代理自动选模型](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/docs/media/guide-zh.webp)](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4)
+[English](README.md) · 中文
 
-▶ 32 秒引导视频：[简体中文](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4) · [English](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-en.mp4)
+[![引导视频：三步，让子代理自动选模型](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/docs/media/guide-zh.webp)](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4)
 
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
@@ -10,7 +10,7 @@
 
 ```sh
 pi install npm:pi-subagents@0.69.0
-pi install npm:@each1024/pi-jev-route-setting
+pi install npm:@each1024/pi-jev-route
 ```
 
 已经安装 `pi-subagents`？保留即可，本扩展使用它的原生启动流程。要求 Node **22.18+**、Pi **0.85.1+**。安装后执行 `/reload`；路由默认开启。
@@ -35,7 +35,7 @@ pi install npm:@each1024/pi-jev-route-setting
 
 **模型范围与路由审计。** 选择允许使用的模型和回退策略，查看选型及回退记录。上图为功能示意，不是界面截图；审计不代表任务完成。
 
-设置页列出配置模型，并提供路由、回退和审计选项；修改会保存到本机。页面不加载外部脚本、字体或资源。远程或无界面会话不会自动打开本机浏览器。
+设置页列出配置模型，并提供路由、回退和审计选项；页面顶部可切换 English / 简体中文，修改会自动保存，右上角显示“已保存”；离开页面不再确认。恢复默认会保留界面语言并自动保存；刷新审计日志会保留尚未写入的编辑。若设置发生冲突，需要明确重新读取设置。页面不加载外部脚本、字体或资源。远程或无界面会话不会自动打开本机浏览器。
 
 ## 隐私与凭证
 
@@ -57,6 +57,6 @@ npm run check
 npm test
 ```
 
-测试使用模拟分类和隔离的临时存储，不消耗模型额度。[完整技术参考](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.zh-CN.md) · [English reference](https://github.com/eachann1024/pi-jev-route/blob/main/docs/reference.md)
+测试使用模拟分类和隔离的临时存储，不消耗模型额度。[完整技术参考](docs/reference.zh-CN.md)
 
 MIT 许可证。
