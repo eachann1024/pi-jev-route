@@ -10,16 +10,16 @@
 
 ```sh
 pi install npm:pi-subagents@0.69.0
-pi install npm:@each1024/pi-jev-route
+pi install npm:@each1024/pi-jev-route-setting
 ```
 
 已经安装 `pi-subagents`？保留即可，本扩展使用它的原生启动流程。要求 Node **22.18+**、Pi **0.85.1+**。安装后执行 `/reload`；路由默认开启。
 
 ## 开始使用
 
-首次在本机交互式 Pi 会话中使用时，扩展会在浏览器打开英文欢迎页。点击 **Open settings** 查看可用模型和路由选项。之后可执行 `/pi-jev-route welcome` 手动重新打开欢迎页。
+首次在本机交互式 Pi 会话中使用时，扩展会在浏览器打开英文欢迎页。点击 **Open settings** 查看可用模型和路由选项。之后可执行 `/pi-jev-route-setting welcome` 手动重新打开欢迎页。
 
-`/pi-jev-route` 打开本机设置与审计页面。首次欢迎流程也会启动回环服务以显示欢迎页；仅安装 npm 包不会自动打开浏览器。服务闲置后关闭，不会创建公网监听或隧道。
+`/pi-jev-route-setting` 打开本机设置与审计页面。首次欢迎流程也会启动回环服务以显示欢迎页；仅安装 npm 包不会自动打开浏览器。服务闲置后关闭，不会创建公网监听或隧道。
 
 ## 路由方式
 

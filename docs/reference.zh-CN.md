@@ -8,10 +8,10 @@
 
 ```sh
 pi install npm:pi-subagents@0.69.0
-pi install npm:@each1024/pi-jev-route
+pi install npm:@each1024/pi-jev-route-setting
 ```
 
-路由默认开启。首次在本机交互式 Pi 会话中使用时会显示英文欢迎页，并启动本机页面服务以提供设置入口。执行 `/pi-jev-route welcome` 可再次打开欢迎页；`/pi-jev-route` 直接打开设置与审计页。仅安装 npm 包不会自动打开浏览器。
+路由默认开启。首次在本机交互式 Pi 会话中使用时会显示英文欢迎页，并启动本机页面服务以提供设置入口。执行 `/pi-jev-route-setting welcome` 可再次打开欢迎页；`/pi-jev-route-setting` 直接打开设置与审计页。仅安装 npm 包不会自动打开浏览器。
 
 ## 路由行为
 
@@ -23,7 +23,7 @@ Jev 根据 `settings.json` 的 `enabledModels`、模型说明和路由规则选�
 
 ## 首次欢迎页与本机页面
 
-首次在本机交互式 Pi 会话中使用时，扩展显示英文欢迎页，其中有 **Open settings** 操作。执行 `/pi-jev-route welcome` 可重新打开。欢迎流程会启动回环本机页面服务以提供欢迎页；仅安装 npm 包不会启动浏览器。`/pi-jev-route` 打开设置和日志。
+首次在本机交互式 Pi 会话中使用时，扩展显示英文欢迎页，其中有 **Open settings** 操作。执行 `/pi-jev-route-setting welcome` 可重新打开。欢迎流程会启动回环本机页面服务以提供欢迎页；仅安装 npm 包不会启动浏览器。`/pi-jev-route-setting` 打开设置和日志。
 
 页面列出 `settings.json` 中所有 `enabledModels` 项，修改后自动保存。支持中文和 English 切换，之后的日志文字跟随所选语言。页面提供回退模型、样式策略和高级路由选项，没有备注栏。暂时不可用模型的说明会保留。分类过程中若设置发生变化，该次尝试会被阻止。并发设置编辑会因版本冲突而拒绝覆盖。
 
@@ -32,13 +32,13 @@ Jev 根据 `settings.json` 的 `enabledModels`、模型说明和路由规则选�
 ### 命令
 
 ```text
-/pi-jev-route          打开设置和日志
-/pi-jev-route welcome  重新打开欢迎页
-/pi-jev-route last     查看最新持久审计记录
-/pi-jev-route log <编号或唯一前缀>  查询一条无歧义记录
-/pi-jev-route status   查看启用状态与覆盖范围
-/pi-jev-route on       开启子代理路由
-/pi-jev-route off      关闭子代理路由，不改当前模型
+/pi-jev-route-setting          打开设置和日志
+/pi-jev-route-setting welcome  重新打开欢迎页
+/pi-jev-route-setting last     查看最新持久审计记录
+/pi-jev-route-setting log <编号或唯一前缀>  查询一条无歧义记录
+/pi-jev-route-setting status   查看启用状态与覆盖范围
+/pi-jev-route-setting on       开启子代理路由
+/pi-jev-route-setting off      关闭子代理路由，不改当前模型
 ```
 
 ## 覆盖范围与审计
@@ -70,7 +70,7 @@ Jev 根据 `settings.json` 的 `enabledModels`、模型说明和路由规则选�
 
 ## 开发与迁移
 
-本包取代早期提供主会话 `auto`/`shadow` 路由的本地实验。安装本包前，请从 Pi 扩展发现目录移除旧扩展，不要让两个版本同时占用 `/pi-jev-route`。本包不取代或修改独立审阅已完成回复的 Pi Jev Reply。
+本包取代早期提供主会话 `auto`/`shadow` 路由的本地实验。安装本包前，请从 Pi 扩展发现目录移除旧扩展，不要让两个版本同时占用 `/pi-jev-route-setting`。本包不取代或修改独立审阅已完成回复的 Pi Jev Reply。
 
 ```sh
 npm ci --ignore-scripts

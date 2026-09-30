@@ -16,7 +16,7 @@ function fixture(dir, mode='tui', fail=false) {
   const hooks=new Map(),commands=new Map(),urls=[],notices=[];
   const ctx={mode,model:undefined,modelRegistry:{getAvailable:()=>[]},sessionManager:{getSessionId:()=>dir},ui:{notify:m=>notices.push(m)}};
   extension({on:(n,f)=>hooks.set(n,f),registerCommand:(n,c)=>commands.set(n,c),registerTool:()=>{},registerEntryRenderer:()=>{},getAllTools:()=>[{name:'subagent'}],exec:async(_cmd,args)=>{urls.push(args.at(-1));if(fail)throw Error('unavailable');return {code:0}}});
-  const f={ctx,urls,notices,start:()=>hooks.get('session_start')({},ctx),welcome:()=>commands.get('pi-jev-route').handler('welcome',ctx),shutdown:()=>hooks.get('session_shutdown')(),prompt:()=>hooks.get('before_agent_start')({systemPrompt:'original'},ctx)};
+  const f={ctx,urls,notices,start:()=>hooks.get('session_start')({},ctx),welcome:()=>commands.get('pi-jev-route-setting').handler('welcome',ctx),shutdown:()=>hooks.get('session_shutdown')(),prompt:()=>hooks.get('before_agent_start')({systemPrompt:'original'},ctx)};
   active=f;return f;
 }
 try {

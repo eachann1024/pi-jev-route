@@ -167,7 +167,7 @@ export default function jevRoute(pi: ExtensionAPI) {
       if (!await openPage(ctx, "welcome")) { if (store === db) db.releaseOnboarding(owner); }
     } catch {
       if (store === db) { try { db.releaseOnboarding(owner); } catch { /* Retry remains possible after the lease expires. */ } }
-      if (operation === lifetime) ctx.ui.notify("Could not open the welcome page. Run /pi-jev-route welcome to retry.", "warning");
+      if (operation === lifetime) ctx.ui.notify("Could not open the welcome page. Run /pi-jev-route-setting welcome to retry.", "warning");
     }
   };
   pi.on("session_start", (_, ctx) => initialize(ctx));
@@ -301,7 +301,7 @@ export default function jevRoute(pi: ExtensionAPI) {
   });
 
   const command = {
-    description: "设置、状态或查询持久路由审计日志",
+    description: "Open routing settings; manage models and view routing audit logs",
     handler: async (args: string, ctx: ExtensionContext) => {
       context = ctx;
       const action = args.trim() || "settings";
@@ -317,7 +317,7 @@ export default function jevRoute(pi: ExtensionAPI) {
       }
       if (action.startsWith("log ")) {
         const reference = action.slice(4).trim();
-        if (!reference) { ctx.ui.notify("用法：/pi-jev-route log <完整编号或唯一前缀>", "info"); return; }
+        if (!reference) { ctx.ui.notify("用法：/pi-jev-route-setting log <完整编号或唯一前缀>", "info"); return; }
         const found = ensureStore().findLog(reference);
         ctx.ui.notify(found.ambiguous ? "审计编号前缀有歧义，请提供更长前缀。" : found.log ? describeLog(found.log) : "未找到该审计记录。", "info"); return;
       }
@@ -329,11 +329,11 @@ export default function jevRoute(pi: ExtensionAPI) {
         catch { ctx.ui.notify("设置未保存，原文件未覆盖。", "error"); }
         return;
       }
-      if (action !== "settings") { ctx.ui.notify("用法：/pi-jev-route [settings|welcome|on|off|status|last|log <id或唯一前缀>]", "info"); return; }
+      if (action !== "settings") { ctx.ui.notify("用法：/pi-jev-route-setting [settings|welcome|on|off|status|last|log <id或唯一前缀>]", "info"); return; }
       if (!isLocalInteractive(ctx)) { ctx.ui.notify("请在本机交互式 Pi 中打开 HTML 设置。", "warning"); return; }
       try { await openPage(ctx, "settings"); }
       catch { ctx.ui.notify("无法打开路由设置，请检查文件权限。", "error"); }
     },
   };
-  pi.registerCommand("pi-jev-route", command);
+  pi.registerCommand("pi-jev-route-setting", command);
 }

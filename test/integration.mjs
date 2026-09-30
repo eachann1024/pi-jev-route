@@ -38,7 +38,7 @@ const pi = { exec: async (_bin, args) => { openedUrls.push(args.at(-1)); if (exe
   setThinkingLevel: () => { throw Error('Must never change parent thinking'); },
 };
 extension(pi);
-assert.deepEqual([...commands.keys()], ['pi-jev-route']);
+assert.deepEqual([...commands.keys()], ['pi-jev-route-setting']);
 assert(tools.has('jev_route_history'));
 const emit = (type, event = {}) => hooks.get(type)?.(event, ctx);
 const event = (input, id = randomUUID()) => ({ toolName: 'subagent', toolCallId: id, input });
@@ -78,7 +78,7 @@ try {
   const run = event({ agent: 'worker', task: 'Implement a bounded formatter without changing permissions.', async: true, toolBudget: { hard: 3 } });
   assert.equal(await emit('tool_call', run), undefined);
   assert.equal(run.input.model, 'fixture/low:low'); assert.equal(calls, 1);
-  assert.equal(entries[0][0], 'pi-jev-route');
+  assert.equal(entries[0][0], 'pi-jev-route-setting');
   assert.deepEqual(run.input.toolBudget, { hard: 3 }); assert.equal(ctx.model, main);
   assert(!JSON.stringify(db.getLogs()).includes(run.input.task));
   assert(!JSON.stringify(db.getLogs()).includes('test-only-credential'));
@@ -103,7 +103,7 @@ try {
   await emit('tool_call', alias); assert.equal(calls, 2);
   assert.equal(alias.input.model, 'fixture/low:high'); assert.equal(db.getLogs()[0].outcome, 'explicit');
 
-  const pluginName = event({ agent: 'worker', task: 'Read a bounded file.', model: 'pi-jev-route' });
+  const pluginName = event({ agent: 'worker', task: 'Read a bounded file.', model: 'pi-jev-route-setting' });
   await emit('tool_call', pluginName);
   assert.equal(pluginName.input.model, 'fixture/low:low'); assert.equal(calls, 3);
 

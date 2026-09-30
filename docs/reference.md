@@ -8,10 +8,10 @@ Requires Node.js 22.18+ and Pi 0.85.1+. The extension uses Pi's native TypeScrip
 
 ```sh
 pi install npm:pi-subagents@0.69.0
-pi install npm:@each1024/pi-jev-route
+pi install npm:@each1024/pi-jev-route-setting
 ```
 
-Routing is enabled by default. The first local interactive session displays the English welcome page and starts the local console server for its settings link. `/pi-jev-route welcome` opens that welcome page again. `/pi-jev-route` opens the settings and audit console directly. Installing the package does not itself open a browser.
+Routing is enabled by default. The first local interactive session displays the English welcome page and starts the local console server for its settings link. `/pi-jev-route-setting welcome` opens that welcome page again. `/pi-jev-route-setting` opens the settings and audit console directly. Installing the package does not itself open a browser.
 
 ## Routing behavior
 
@@ -23,7 +23,7 @@ Explicit per-run or agent-profile model pins are kept only when they resolve to 
 
 ## First-run welcome and local console
 
-On the first use in a local interactive Pi session, the extension presents an English welcome page with an **Open settings** action. `/pi-jev-route welcome` reopens it. The welcome flow starts the loopback console server to serve the page; the server is not started merely by installing the npm package. `/pi-jev-route` opens settings and logs.
+On the first use in a local interactive Pi session, the extension presents an English welcome page with an **Open settings** action. `/pi-jev-route-setting welcome` reopens it. The welcome flow starts the loopback console server to serve the page; the server is not started merely by installing the npm package. `/pi-jev-route-setting` opens settings and logs.
 
 The console lists every `settings.json` `enabledModels` entry and autosaves changes. It supports Chinese and English; later log text follows the selected language. It includes fallback model, styling policy, and advanced routing options. There is no notes field. Descriptions for temporarily unavailable models are retained. A settings change during classification blocks that attempt. Concurrent settings edits are rejected rather than silently overwritten.
 
@@ -32,13 +32,13 @@ The server binds to `127.0.0.1`, uses a token-protected page, and closes after f
 ### Commands
 
 ```text
-/pi-jev-route          Open settings and logs
-/pi-jev-route welcome  Reopen the welcome page
-/pi-jev-route last     Show the newest persistent audit record
-/pi-jev-route log <id-or-unique-prefix>  Show one unambiguous audit record
-/pi-jev-route status   Show enabled state and coverage
-/pi-jev-route on       Enable child routing
-/pi-jev-route off      Disable child routing; keep current models
+/pi-jev-route-setting          Open settings and logs
+/pi-jev-route-setting welcome  Reopen the welcome page
+/pi-jev-route-setting last     Show the newest persistent audit record
+/pi-jev-route-setting log <id-or-unique-prefix>  Show one unambiguous audit record
+/pi-jev-route-setting status   Show enabled state and coverage
+/pi-jev-route-setting on       Enable child routing
+/pi-jev-route-setting off      Disable child routing; keep current models
 ```
 
 ## Coverage and audit
@@ -70,7 +70,7 @@ Settings and audit records live in `jev-route.sqlite` under Pi's agent directory
 
 ## Development and migration
 
-This package replaces the earlier local experiment that offered main-session `auto`/`shadow` routing. Remove that old extension from Pi's discovery directory before installing this package; do not load both under `/pi-jev-route`. It does not replace or modify Pi Jev Reply, which independently reviews completed replies.
+This package replaces the earlier local experiment that offered main-session `auto`/`shadow` routing. Remove that old extension from Pi's discovery directory before installing this package; do not load both under `/pi-jev-route-setting`. It does not replace or modify Pi Jev Reply, which independently reviews completed replies.
 
 ```sh
 npm ci --ignore-scripts

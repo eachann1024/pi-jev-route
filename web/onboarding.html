@@ -24,7 +24,7 @@
     if (busy) return;
     status.classList.remove('error');
     if (!token) {
-      status.textContent = 'Reopen this guide with /pi-jev-route welcome to restore the connection.';
+      status.textContent = 'Reopen this guide with /pi-jev-route-setting welcome to restore the connection.';
       status.classList.add('error');
       return;
     }
@@ -37,9 +37,9 @@
       });
       if (!response.ok) throw new Error('save');
       if (goToSettings) location.href = '/#' + encodeURIComponent(token);
-      else status.textContent = 'You’re all set. Reopen this guide anytime with /pi-jev-route welcome.';
+      else status.textContent = 'You’re all set. Reopen this guide anytime with /pi-jev-route-setting welcome.';
     } catch {
-      status.textContent = 'Could not save. Try again, or run /pi-jev-route welcome if the connection has expired.';
+      status.textContent = 'Could not save. Try again, or run /pi-jev-route-setting welcome if the connection has expired.';
       status.classList.add('error');
     } finally { busy = false; open.disabled = finish.disabled = false; }
   }
