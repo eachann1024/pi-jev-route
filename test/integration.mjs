@@ -32,15 +32,17 @@ const ctx = { mode: 'tui', model: main, scopedModels: [{ model: low }, { model: 
   ui: { notify: message => notices.push(message) }, signal: undefined,
 };
 const tools = new Map();
-const pi = { exec: async (_bin, args) => { openedUrls.push(args.at(-1)); if (execFail) throw new Error('browser unavailable'); return { code: 0 }; }, on: (event, handler) => hooks.set(event, handler), registerCommand: (name, command) => commands.set(name, command), registerTool: tool => tools.set(tool.name, tool),
+const listeners = event => hooks.get(event) ?? [];
+const pi = { exec: async (_bin, args) => { openedUrls.push(args.at(-1)); if (execFail) throw new Error('browser unavailable'); return { code: 0 }; }, on: (event, handler) => { const list = listeners(event); list.push(handler); hooks.set(event, list); return () => { const index = list.indexOf(handler); if (index >= 0) list.splice(index, 1); }; }, events: { on(channel, handler) { const list = listeners(channel); list.push(handler); hooks.set(channel, list); return () => { const index = list.indexOf(handler); if (index >= 0) list.splice(index, 1); }; }, emit() {} }, registerCommand: (name, command) => commands.set(name, command), registerTool: tool => tools.set(tool.name, tool),
   registerEntryRenderer: () => {}, appendEntry: (...entry) => entries.push(entry),
   getAllTools: () => [{ name: 'subagent' }], setModel: () => { throw Error('Must never change parent model'); },
   setThinkingLevel: () => { throw Error('Must never change parent thinking'); },
 };
 extension(pi);
-assert.deepEqual([...commands.keys()], ['pi-jev-route-setting']);
+assert.deepEqual([...commands.keys()].sort(), ['jev-supervision', 'pi-jev-route-setting']);
+assert.equal(commands.has('pi-jev-route'), false);
 assert(tools.has('jev_route_history'));
-const emit = (type, event = {}) => hooks.get(type)?.(event, ctx);
+const emit = async (type, event = {}) => { let result; for (const handler of [...listeners(type)]) { const value = await handler(event, ctx); if (value !== undefined) result = value; } return result; };
 const event = (input, id = randomUUID()) => ({ toolName: 'subagent', toolCallId: id, input });
 
 try {
@@ -50,7 +52,7 @@ try {
   db = openStore(join(root, 'jev-route.sqlite'));
   assert.match(openedUrls[0], /\/welcome#\w{48}$/);
   const prompt = await emit('before_agent_start', { systemPrompt: 'original' });
-  assert.equal(hooks.get('before_agent_start')({ systemPrompt: 'original' }, ctx)?.systemPrompt.startsWith('original'), true);
+  assert.equal(listeners('before_agent_start')[0]({ systemPrompt: 'original' }, ctx)?.systemPrompt.startsWith('original'), true);
   assert(prompt.systemPrompt.startsWith('original')); assert.match(prompt.systemPrompt, /Jev subagent routing: keep the parent session model/);
   assert.match(prompt.systemPrompt, /omit model/); assert.equal(calls, 0);
   assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(m => m.id), ['fixture/low', 'fixture/main']);

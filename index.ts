@@ -11,6 +11,8 @@ import { loadPiEnabledModels, modelId, resolveEnabledIds, resolveListedModel, sp
 import { DEFAULTS, openStore, parseSettings, type RouteLog, type Settings } from "./lib/store.ts";
 import { routeTask, type Candidate } from "./lib/router.ts";
 
+import { registerSupervision, type SupervisionRuntime } from "./lib/supervision-runtime.ts";
+
 const COVERAGE = "自动覆盖模型发起的结构化 subagent 单任务（含 async）。workflow、/run、定时任务、其他扩展直接派发和子代理内部派发不保证覆盖；未覆盖的工具工作流会记为跳过。";
 const PLUGIN = "pi-jev-route";
 type Badge = { text?: string; summary?: string };
@@ -107,10 +109,14 @@ export default function jevRoute(pi: ExtensionAPI) {
   let lifetime = new AbortController();
   let web: Awaited<ReturnType<typeof import("./lib/web.ts").startWeb>> | undefined;
   let opening: Promise<void> | undefined;
+  let supervision: SupervisionRuntime | undefined;
   const pending = new Map<string, string>();
   const agents = new Map<string, { type: string; model?: string }>();
-  const invalidate = () => { lifetime.abort(); lifetime = new AbortController(); pending.clear(); agents.clear(); web?.close(); web = undefined; opening = undefined; };
-  const settings = () => store?.getSettings() ?? { ...DEFAULTS };
+  const invalidate = () => { lifetime.abort(); lifetime = new AbortController(); pending.clear(); agents.clear(); web?.close(); web = undefined; opening = undefined; supervision?.settingsChanged(); };
+  const settings = () => {
+    try { const value = store?.getSettings() ?? { ...DEFAULTS }; settingsError = ''; return value; }
+    catch { settingsError = '设置格式与当前扩展不兼容，请 /reload 加载最新版；原数据已保留。'; return { ...DEFAULTS, enabled: false, supervision: { ...DEFAULTS.supervision, enabled: false } }; }
+  };
   const ensureStore = () => {
     store ??= openStore(join(getAgentDir(), "jev-route.sqlite"));
     store.getSettings();
@@ -120,7 +126,8 @@ export default function jevRoute(pi: ExtensionAPI) {
     const current = settings();
     return { settings: current, models: context ? scopedCandidates(context, current) : [],
       currentModel: context?.model ? modelId(context.model) : "", scopeMode: loadPiEnabledModels().tokens.length ? "enabledModels" : "none",
-      keyAvailable, logs: store?.getLogs() ?? [], settingsError, coverage: COVERAGE };
+      keyAvailable, logs: store?.getLogs() ?? [], settingsError, coverage: COVERAGE,
+      supervision: supervision?.snapshot() ?? { tasks: [], events: [], coverage: [] } };
   };
   const isLocalInteractive = (ctx: ExtensionContext) => ctx.mode === "tui" && !process.env.SSH_CONNECTION && !process.env.SSH_CLIENT && !process.env.SSH_TTY && !process.env.CI && !process.env.GITHUB_ACTIONS && !process.env.PI_SUBAGENT;
   const ensureWeb = async (ctx: ExtensionContext) => {
@@ -132,7 +139,7 @@ export default function jevRoute(pi: ExtensionAPI) {
       const { startWeb } = await import("./lib/web.ts");
       const welcome = await readFile(new URL("./web/onboarding.html", import.meta.url), "utf8");
       const server = await startWeb(snapshot,
-        (value, previous) => { ensureStore().saveSettings(parseSettings(value), previous); },
+        (value, previous) => { ensureStore().saveSettings(parseSettings(value), previous); supervision?.settingsChanged(); },
         (id, value, previous) => { ensureStore().setNote(id, value, previous); },
         300000, welcome, () => ensureStore().setMetadata("onboarding-complete", "yes"));
       if (operation !== lifetime) server.close(); else web = server;
@@ -147,6 +154,7 @@ export default function jevRoute(pi: ExtensionAPI) {
     server.touch();
     const url = new URL(server.url);
     url.pathname = page === "welcome" ? "/welcome" : "/";
+    if (operation !== lifetime) return false;
     try {
       const result = process.platform === "darwin" ? await pi.exec("open", [url.href], { timeout: 5000 }) : process.platform === "win32" ? await pi.exec("rundll32.exe", ["url.dll,FileProtocolHandler", url.href], { timeout: 5000 }) : await pi.exec("xdg-open", [url.href], { timeout: 5000 });
       if (result.code === 0) return true;
@@ -172,6 +180,12 @@ export default function jevRoute(pi: ExtensionAPI) {
   };
   pi.on("session_start", (_, ctx) => initialize(ctx));
   pi.on("session_tree", (_, ctx) => { invalidate(); context = ctx; });
+  supervision = registerSupervision(pi, {
+    settings: () => settings().supervision,
+    store: () => ensureStore(),
+    allowedModels: ctx => scopedCandidates(ctx, settings()).filter(model => model.enabled).map(model => model.id),
+    locale: () => settings().locale,
+  });
   pi.on("session_before_switch", invalidate);
   pi.on("session_before_fork", invalidate);
   pi.on("session_before_tree", invalidate);

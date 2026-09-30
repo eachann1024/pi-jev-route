@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 // On-demand loopback UI only. No background server or external assets.
 export async function startWeb(
-  snapshot: () => { settings: unknown },
+  snapshot: () => { settings: unknown; supervision?: unknown },
   save: (value: unknown, previous: string) => void,
   note: (id: string, value: string, previous: string) => void,
   idleMs = 300000,

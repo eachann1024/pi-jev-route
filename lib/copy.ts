@@ -8,6 +8,17 @@ export const ROUTING_PROMPT = {
   en: "Jev subagent routing: keep the parent session model. The parent aligns requirements, schedules work, makes key decisions, and summarizes; it must investigate risks and supply a complete plan first. Dispatch independent subagents aggressively to save time; do not spawn empty agents. Use the enabledModels low alias in most cases. Styling: a subagent plus the current model at low thinking. Acceptance is compile success only. Before the first automatic dispatch, call subagent({action:'list',capabilities:true}). Structured subagent({agent, task}) should omit model; Jev selects only from enabledModels. Do not pass out-of-list names, including the plugin name pi-jev-route or other providers. In-list aliases such as low are kept; out-of-list pins are ignored and re-selected. Scripts and workflows are not routed.",
 } as const;
 
+export const SUPERVISION_PROMPT = {
+  zh: {
+    correct: '任务监督提醒：根据当前进展，建议重新核对用户的目标和限制。请检查最近的操作是否仍在推进当前任务；如有偏离，调整后继续。如方向正确，简要说明依据后继续。',
+    recover: '任务恢复提醒：正在使用原模型继续此前的任务。请先检查已有进展和未完成事项，确认上次操作的结果，避免重复执行，再从中断处继续。',
+  },
+  en: {
+    correct: 'Task supervision reminder: based on recent progress, review the user’s goal and constraints. Check whether your recent actions still advance the current task. If they have drifted, adjust and continue. If they remain on track, briefly explain why and continue.',
+    recover: 'Task recovery reminder: continue the previous task using the same model. Review existing progress and remaining work, verify the outcome of the last operation to avoid repeating it, then continue from where the task paused.',
+  },
+} as const;
+
 export const LIGHT_MODEL_DESCRIPTION = {
   zh: "轻量模型。适合边界清楚、可逆的读取、整理、小改动和常规实现；绝大多数子任务优先用这一档。",
   en: "Lightweight model. Use for bounded, reversible reads, cleanup, small edits, and routine implementation; prefer this for most subtasks.",

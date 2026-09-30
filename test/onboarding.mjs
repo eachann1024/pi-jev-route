@@ -15,8 +15,9 @@ function fixture(dir, mode='tui', fail=false) {
   process.env.PI_CODING_AGENT_DIR=join(root,dir);
   const hooks=new Map(),commands=new Map(),urls=[],notices=[];
   const ctx={mode,model:undefined,modelRegistry:{getAvailable:()=>[]},sessionManager:{getSessionId:()=>dir},ui:{notify:m=>notices.push(m)}};
-  extension({on:(n,f)=>hooks.set(n,f),registerCommand:(n,c)=>commands.set(n,c),registerTool:()=>{},registerEntryRenderer:()=>{},getAllTools:()=>[{name:'subagent'}],exec:async(_cmd,args)=>{urls.push(args.at(-1));if(fail)throw Error('unavailable');return {code:0}}});
-  const f={ctx,urls,notices,start:()=>hooks.get('session_start')({},ctx),welcome:()=>commands.get('pi-jev-route-setting').handler('welcome',ctx),shutdown:()=>hooks.get('session_shutdown')(),prompt:()=>hooks.get('before_agent_start')({systemPrompt:'original'},ctx)};
+  extension({on(name, handler){const list=hooks.get(name)??[];list.push(handler);hooks.set(name,list);return ()=>{const index=list.indexOf(handler);if(index>=0)list.splice(index,1)}},events:{on(name,handler){const list=hooks.get(name)??[];list.push(handler);hooks.set(name,list);return ()=>{const index=list.indexOf(handler);if(index>=0)list.splice(index,1)}},emit(){}},registerCommand:(n,c)=>commands.set(n,c),registerTool:()=>{},registerEntryRenderer:()=>{},getAllTools:()=>[{name:'subagent'}],exec:async(_cmd,args)=>{urls.push(args.at(-1));if(fail)throw Error('unavailable');return {code:0}}});
+  const call = async (name, event = {}) => { let result; for (const handler of [...(hooks.get(name) ?? [])]) { const value = await handler(name === 'before_agent_start' ? {systemPrompt:'original', ...event} : event, ctx); if (value !== undefined) result = value; } return result; };
+  const f={ctx,urls,notices,start:()=>call('session_start'),welcome:()=>commands.get('pi-jev-route-setting').handler('welcome',ctx),shutdown:()=>call('session_shutdown'),prompt:()=>call('before_agent_start',{systemPrompt:'original'})};
   active=f;return f;
 }
 try {
@@ -31,12 +32,12 @@ try {
   assert.equal((await fetch(new URL('/onboarding/complete',reopen),{method:'POST',headers:{authorization:`Bearer ${reopen.hash.slice(1)}`}})).status,200);
   await f.start();assert.equal(f.urls.length,2,'completed guide must not open automatically');
   await f.welcome();assert.equal(f.urls.length,3);assert.equal((await fetch(f.urls.at(-1))).status,200,'manual reopen after completion');
-  f.shutdown();
-  const rpc=fixture('rpc','rpc');await rpc.start();await rpc.welcome();assert.equal(rpc.urls.length,0);rpc.shutdown();
-  for(const key of ['SSH_CONNECTION','SSH_TTY','CI','PI_SUBAGENT']) {process.env[key]='1';const remote=fixture(key);await remote.start();await remote.welcome();assert.equal(remote.urls.length,0,key);remote.shutdown();delete process.env[key];}
-  const failed=fixture('browser-failure','tui',true);await failed.start();assert(failed.prompt().systemPrompt.startsWith('original'));await failed.start();assert.equal(failed.urls.length,2,'failed browser launch can retry');failed.shutdown();
+await f.shutdown();
+  const rpc=fixture('rpc','rpc');await rpc.start();await rpc.welcome();assert.equal(rpc.urls.length,0);await rpc.shutdown();
+  for(const key of ['SSH_CONNECTION','SSH_TTY','CI','PI_SUBAGENT']) {process.env[key]='1';const remote=fixture(key);await remote.start();await remote.welcome();assert.equal(remote.urls.length,0,key);await remote.shutdown();delete process.env[key];}
+  const failed=fixture('browser-failure','tui',true);await failed.start();assert((await failed.prompt()).systemPrompt.startsWith('original'));await failed.start();assert.equal(failed.urls.length,2,'failed browser launch can retry');await failed.shutdown();
   const path=join(root,'legacy.sqlite');const legacy=new DatabaseSync(path);legacy.exec('CREATE TABLE settings(id INTEGER PRIMARY KEY,json TEXT NOT NULL)');legacy.prepare('INSERT INTO settings VALUES(1,?)').run(JSON.stringify({...DEFAULTS,locale:'zh'}));legacy.close();const db=openStore(path);assert.equal(db.getSettings().locale,'zh');assert.equal(db.claimOnboarding('test'),false);db.close();
   const freshPath=join(root,'claims.sqlite');const first=openStore(freshPath),second=openStore(freshPath);assert.equal(first.claimOnboarding('a',1000),true);assert.equal(second.claimOnboarding('b',1001),false);second.releaseOnboarding('b');assert.equal(second.claimOnboarding('b',1002),false);first.releaseOnboarding('a');assert.equal(second.claimOnboarding('b',1003),true);assert.equal(first.claimOnboarding('c',301004),true);first.saveSettings({...DEFAULTS,locale:'zh'});first.close();second.close();const saved=openStore(freshPath);assert.equal(saved.getMetadata('onboarding-complete'),undefined,'new settings must not be mistaken for legacy migration');saved.close();
-  const racing=fixture('transition');const beginning=racing.start();racing.shutdown();await beginning;assert.equal(racing.urls.length,0,'transition cancels pending browser launch');
+  const racing=fixture('transition');const beginning=racing.start();const ending=racing.shutdown();await Promise.all([beginning,ending]);assert.equal(racing.urls.length,0,'transition cancels pending browser launch');
   console.log('onboarding: first launch, token, completion, reopen, lease/CAS, legacy language, remote/headless, browser failure and shutdown passed');
-} finally {active?.shutdown();for(const k of keys)if(prior[k]===undefined)delete process.env[k];else process.env[k]=prior[k];await rm(root,{recursive:true,force:true});}
+} finally {await active?.shutdown();for(const k of keys)if(prior[k]===undefined)delete process.env[k];else process.env[k]=prior[k];await rm(root,{recursive:true,force:true});}

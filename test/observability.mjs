@@ -22,14 +22,14 @@ const ctx = {
   ui: { notify: message => notices.push(message), setStatus() {} },
 };
 const pi = {
-  on: (name, handler) => handlers.set(name, handler),
+  on: (name, handler) => { const list = handlers.get(name) || []; list.push(handler); handlers.set(name, list); },
   registerTool: tool => tools.set(tool.name, tool),
   registerCommand() {}, registerEntryRenderer() {}, appendEntry() {},
   getAllTools: () => [{ name: 'subagent' }],
 };
 const { default: extension } = await import('../index.ts');
 extension(pi);
-const emit = (name, event) => handlers.get(name)?.(event, ctx);
+const emit = async (name, event = {}) => { let result; for (const handler of [...(handlers.get(name) || [])]) { const value = await handler(event, ctx); if (value !== undefined) result = value; } return result; };
 const toolEvent = (input = {}, toolCallId = randomUUID()) => ({ toolName: 'subagent', toolCallId, input });
 const resultEvent = (toolCallId, fields = {}) => ({ toolName: 'subagent', toolCallId, input: {}, content: [{ type: 'text', text: 'original result' }], details: { results: [{ model: 'fixture/low', ...fields }] }, isError: false, usage: { input: 9, output: 2 } });
 let store;
@@ -144,6 +144,7 @@ try {
   assert(notices.some(message => /未持久化/.test(message)));
   console.log('observability: legacy compatibility, session-bound history, receipts, execution states, unrelated results and persistence failure passed');
 } finally {
+  await emit('session_shutdown');
   try { store?.close(); } catch {}
   if (oldDir === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = oldDir;
   if (oldKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = oldKey;
