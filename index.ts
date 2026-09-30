@@ -128,7 +128,9 @@ export default function jevRoute(pi: ExtensionAPI) {
   };
   const snapshot = () => {
     const current = settings();
-    return { settings: current, models: context ? scopedCandidates(context, current) : [],
+    return { settings: current, defaults: DEFAULTS,
+      defaultModels: { en: context ? scopedCandidates(context, { ...DEFAULTS, locale: "en" }) : [], zh: context ? scopedCandidates(context, { ...DEFAULTS, locale: "zh" }) : [] },
+      models: context ? scopedCandidates(context, current) : [],
       catalog: context ? catalogEntries(availableModels(context).values()) : [],
       currentModel: context?.model ? modelId(context.model) : "", scopeMode: loadPiEnabledModels().tokens.length ? "enabledModels" : "none",
       keyAvailable, logs: store?.getLogs() ?? [], settingsError, coverage: COVERAGE,

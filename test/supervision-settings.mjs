@@ -123,7 +123,14 @@ try {
   assert.equal((await fetch(url.origin + '/settings', { method: 'PUT', headers: { authorization, 'content-type': 'application/json', 'if-match': etag }, body: JSON.stringify(changed) })).status, 409);
   assert.equal(store.getSettings().instructions, 'keep me');
   assert.equal(JSON.stringify(store.getSettings()), JSON.stringify(store.getSettings()));
-  console.log('settings: migration, persistence, retention and ETag conflict passed');
+  const html = await readFile(new URL('../web/index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="supervision-enabled"/);
+  assert.match(html, /id="event-timeline"/);
+  assert.match(html, /function queueSave/);
+  assert.match(html, /headers\['If-Match'\]\s*=\s*etag/);
+  assert.equal(JSON.parse(readFileSync(legacyPath) ? 'true' : 'false'), true);
+  assert.equal(previous.includes('keep me'), true);
+  console.log('settings: default enabled, legacy modes, strict timings, bounded redacted history, and ETag conflict passed');
 } finally {
   ui?.close();
   store?.close();

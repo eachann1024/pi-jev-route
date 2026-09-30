@@ -46,8 +46,6 @@ const emit = async (type, event = {}) => { let result; for (const handler of [..
 const event = (input, id = randomUUID()) => ({ toolName: 'subagent', toolCallId: id, input });
 
 try {
-  await writeEnabled(['fixture/*']);
-  assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(model => model.id), ['fixture/low', 'fixture/main', 'fixture/other']);
   await writeEnabled(['low', 'main']);
   execFail = true;
   await emit('session_start');
@@ -63,6 +61,8 @@ try {
   assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(m => m.id), ['fixture/low', 'fixture/main']);
   await writeEnabled([]);
   assert.equal(scopedCandidates(ctx, db.getSettings()).length, 0);
+  await writeEnabled(['fixture/*']);
+  assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(model => model.id), ['fixture/low', 'fixture/main', 'fixture/other']);
   await writeEnabled(['low', 'main']);
   ctx.scopedModels = [{ model: low }, { model: main }];
 
@@ -82,7 +82,7 @@ try {
   const run = event({ agent: 'worker', task: 'Implement a bounded formatter without changing permissions.', async: true, toolBudget: { hard: 3 } });
   assert.equal(await emit('tool_call', run), undefined);
   assert.equal(run.input.model, 'fixture/low:low'); assert.equal(calls, 1);
-  assert.equal(entries[0][0], 'pi-jev-route-setting');
+  assert.equal(entries[0][0], 'pi-jev-route');
   assert.deepEqual(run.input.toolBudget, { hard: 3 }); assert.equal(ctx.model, main);
   assert(!JSON.stringify(db.getLogs()).includes(run.input.task));
   assert(!JSON.stringify(db.getLogs()).includes('test-only-credential'));
@@ -107,7 +107,7 @@ try {
   await emit('tool_call', alias); assert.equal(calls, 2);
   assert.equal(alias.input.model, 'fixture/low:high'); assert.equal(db.getLogs()[0].outcome, 'explicit');
 
-  const pluginName = event({ agent: 'worker', task: 'Read a bounded file.', model: 'pi-jev-route-setting' });
+  const pluginName = event({ agent: 'worker', task: 'Read a bounded file.', model: 'pi-jev-route' });
   await emit('tool_call', pluginName);
   assert.equal(pluginName.input.model, 'fixture/low:low'); assert.equal(calls, 3);
 
@@ -147,6 +147,15 @@ try {
   assert.equal((await nativeFetch(new URL('/onboarding/complete', welcomeUi.url), { method: 'POST', headers: welcomeAuth })).status, 200);
   assert.equal(db.getMetadata('onboarding-complete'), 'yes');
   assert.match(await (await nativeFetch(new URL('/welcome', welcomeUi.url))).text(), /Welcome/);
+  execFail = false;
+  await commands.get('pi-jev-route-setting').handler('', ctx);
+  const productionUrl = new URL(openedUrls.at(-1));
+  const productionSnapshot = await (await nativeFetch(productionUrl.origin + '/settings', { headers: { authorization: `Bearer ${productionUrl.hash.slice(1)}` } })).json();
+  assert.equal(productionSnapshot.defaults.confidenceThreshold, .55);
+  assert.equal(productionSnapshot.defaults.timeoutMs, 5000);
+  assert.equal(productionSnapshot.defaults.locale, 'en');
+  assert(productionSnapshot.defaultModels.en.every(model => model.enabled));
+  assert.match(productionSnapshot.defaultModels.zh[0].description, /轻量/);
   const page = await nativeFetch(origin); assert.equal(page.status, 200); assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   assert.equal((await nativeFetch(origin + '/settings')).status, 403);
   assert.equal((await nativeFetch(origin + '/settings', { headers: { authorization, origin: 'https://hostile.invalid' } })).status, 403);
@@ -175,7 +184,19 @@ try {
   assert.equal(db.getLog(log.id).note, 'Reviewed the routing decision.');
   const html = await readFile(new URL('../web/index.html', import.meta.url), 'utf8');
   const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1]; assert(script);
-  assert.match(html, /id="locale"/);
+  assert.doesNotMatch(html, /id="locale"/);
+  const { runInNewContext } = await import('node:vm');
+  const dictionaries = runInNewContext(script.slice(script.indexOf('const ui ='), script.indexOf("let locale = 'en'")) + ';ui');
+  assert.deepEqual(Object.keys(dictionaries.en).sort(), Object.keys(dictionaries.zh).sort());
+  for (const locale of ['en', 'zh']) {
+    for (const key of ['modes', 'phases', 'sources']) assert.equal(typeof dictionaries[locale][key], 'object', `${locale}.${key}`);
+    for (const key of ['reading', 'boot', 'retry', 'connect', 'expired', 'auth']) assert.equal(typeof dictionaries[locale][key], 'string', `${locale}.${key}`);
+  }
+  new (await import('node:vm')).Script(script);
+  for (const [, key] of html.matchAll(/data-i18n="([^"]+)"/g)) {
+    assert.equal(typeof dictionaries.en[key], 'string', `Missing English text: ${key}`);
+    assert.equal(typeof dictionaries.zh[key], 'string', `Missing Chinese text: ${key}`);
+  }
   // Every literal UI lookup must still resolve after markup refactors.
   const staticIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]));
   for (const [, id] of script.matchAll(/\$\('([^']+)'\)/g)) {
@@ -183,7 +204,24 @@ try {
   }
   assert.match(html, /id="style-auto" type="radio" name="style-policy"/);
   assert.match(html, /id="style-main" type="radio" name="style-policy"/);
-  assert.doesNotMatch(html, /保存设置/);
+  assert.match(html, /id="saved-toast"[^>]*role="status"/);
+  assert.match(html, /position:fixed;top:var\(--space-4\);right:var\(--space-4\)/);
+  assert.match(html, /position:fixed;top:var\(--space-4\);right:var\(--space-4\)/);
+  assert.doesNotMatch(html, /id="save"/);
+  for (const id of ['lang-en', 'lang-zh']) {
+    assert.equal([...html.matchAll(new RegExp(`id="${id}"`, 'g'))].length, 1);
+    assert.match(html, new RegExp(`id="${id}" type="button" aria-pressed="(?:true|false)"`));
+    assert(html.indexOf(`id="${id}"`) < html.indexOf('</header>'));
+  }
+  assert.match(html, /role="group" aria-labelledby="language-label"/);
+  assert.doesNotMatch(script, /scheduleSave|innerHTML|beforeunload/);
+  assert.match(script, /function queueSave/);
+  assert.match(script, /try \{[\s\S]*applyChrome\(\)[\s\S]*\} catch/);
+  assert.match(html, /id="retry" type="button" hidden/);
+  const pageStyle = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  assert(pageStyle.lastIndexOf('@media(max-width:700px)') > pageStyle.lastIndexOf('.timing-grid{display'));
+  assert.match(script, /savedToast/);
+  assert.match(script, /headers\['If-Match'\]\s*=\s*etag/);
   assert.doesNotMatch(html, /保存备注/);
   assert.doesNotMatch(html, /id="model-search"/);
   const jsPath = join(root, 'ui.js'); await writeFile(jsPath, script);

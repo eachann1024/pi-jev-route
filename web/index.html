@@ -1,273 +1,618 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="no-referrer">
-<title>Pi Jev Route</title>
-<style>
-:root{color-scheme:light dark;--background:light-dark(#f6f3ed,#141614);--surface:light-dark(#fffcf7,#1d211d);--foreground:light-dark(#1f241f,#eceee8);--primary:light-dark(#2f5a3e,#b7d4b0);--secondary:light-dark(#eeebe4,#292e29);--muted:light-dark(#626b62,#a8b0a4);--destructive:light-dark(#a52c26,#ffafa5);--border:light-dark(#ded9cf,#3a4038);--control-border:light-dark(#777b73,#899187);--ring:var(--primary);--text-xs:.75rem;--text-sm:.875rem;--text-base:1rem;--text-lg:1.375rem;--text-title:clamp(1.75rem,4vw,2.375rem);--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--radius-sm:4px}
-*{box-sizing:border-box}body{margin:0;background:var(--background);color:var(--foreground);font:var(--text-base)/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:900px;margin:auto;padding:var(--space-8) var(--space-6) 56px}header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;padding-bottom:var(--space-4);border-bottom:1px solid var(--border)}h1{font:italic 400 var(--text-title)/1.1 "Iowan Old Style","Palatino Linotype","Songti SC",serif;letter-spacing:.01em;margin:0}h2{font:400 var(--text-lg)/1.25 "Iowan Old Style","Palatino Linotype","Songti SC",serif;margin:0}p{margin:var(--space-2) 0}.muted,.hint{color:var(--muted);font-size:var(--text-sm)}.subtitle{color:var(--muted);margin:var(--space-1) 0 0;font-size:var(--text-sm)}section{padding-top:var(--space-6)}button,input,select,textarea{font:inherit;color:inherit}button{background:var(--surface);border:1px solid var(--control-border);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3);cursor:pointer;min-height:40px}button:hover{background:var(--secondary)}button:disabled{opacity:.5;cursor:not-allowed}:focus-visible{outline:2px solid var(--ring);outline-offset:3px}:focus:not(:focus-visible){outline:none;box-shadow:none}fieldset{border:0;padding:0;margin:0;min-width:0}label{display:block;font-size:var(--text-sm);margin-bottom:var(--space-2)}.check{display:flex;align-items:center;gap:var(--space-2);min-height:32px}.check input{width:20px;height:20px;accent-color:var(--primary);margin:0}input[type=number],select,textarea{width:100%;border:1px solid var(--control-border);border-radius:var(--radius-sm);background-color:var(--surface);padding:var(--space-2);font-size:var(--text-sm)}select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 12px) 50%;background-size:4px 4px,4px 4px;background-repeat:no-repeat;padding-right:36px;height:40px;line-height:1.25}textarea{resize:vertical;min-height:64px}textarea::placeholder{color:var(--muted)}.field{margin:var(--space-4) 0;max-width:480px}#locale{width:auto;min-width:110px}.tools{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}.tools label{margin:0}.tools button,.tools select{height:40px;min-height:40px;font-size:var(--text-sm);line-height:1.25}.status{min-height:24px;margin:var(--space-2) 0;font-size:var(--text-sm)}.error{color:var(--destructive)}.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-3)}.model-list{border-top:1px solid var(--border)}.model-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--border)}.model-identity{min-width:0}.model-name{display:flex;align-items:center;gap:var(--space-2);font-weight:600}.model-id{display:block;color:var(--muted);font-size:var(--text-xs);overflow-wrap:anywhere}.model-controls{display:flex;align-items:flex-start;gap:var(--space-3);min-width:0}.model-controls>.check{flex:0 0 auto;margin:0}.model-controls>.model-description{display:block;min-width:0;flex:1;min-height:64px;margin:0;overflow-wrap:anywhere}.model-name{flex-wrap:wrap;overflow-wrap:anywhere}.model-name>span:first-child{min-width:0}.badge{font-size:var(--text-xs);font-weight:500;color:var(--primary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 var(--space-1)}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:var(--text-sm);text-align:left}th{font-weight:500;color:var(--muted);background:var(--secondary)}th,td{padding:var(--space-3);border-bottom:1px solid var(--border);vertical-align:top}#logs-table{min-width:880px}#logs-table td{min-width:88px;max-width:220px;overflow-wrap:anywhere}details{border-top:1px solid var(--border);padding:var(--space-3) 0;margin:var(--space-3) 0}summary{cursor:pointer;min-height:24px}.segmented{display:inline-flex;border:1px solid var(--control-border);border-radius:var(--radius-sm);overflow:hidden}.segmented label{display:flex;align-items:center;gap:var(--space-2);margin:0;padding:var(--space-2) var(--space-3);cursor:pointer}.segmented label+label{border-left:1px solid var(--control-border)}.segmented input{accent-color:var(--primary);margin:0}.segmented label:has(input:checked){background:var(--secondary);color:var(--primary)}.style-hint{margin-top:var(--space-2)}#logs{border-top:1px solid var(--border);margin-top:var(--space-6)}#log-count{float:right}#logs summary{display:list-item;font:400 var(--text-lg)/1.25 "Iowan Old Style","Palatino Linotype","Songti SC",serif}[hidden]{display:none!important}@media(max-width:600px){main{padding:var(--space-6) var(--space-4)}.model-row{grid-template-columns:1fr;gap:var(--space-2)}.model-controls{align-items:flex-start}.segmented{display:flex;width:100%}.segmented label{flex:1;justify-content:center;padding:var(--space-2)}.tools{width:100%}.tools #refresh{margin-left:auto}}@media(max-width:375px){.model-controls{flex-direction:column}.model-description{width:100%}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
-</style>
-</head>
-<body>
-<main>
-<header>
-  <div><h1>Pi Jev Route</h1><p class="subtitle" id="page-subtitle">Choose suitable models for subagents and keep a local decision log.</p></div>
-  <div class="tools">
-    <label for="locale" id="locale-label">Language</label>
-    <select id="locale"><option value="en">English</option><option value="zh">中文</option></select>
-    <button id="refresh" type="button">Refresh</button>
-  </div>
-</header>
-<p id="status" class="status" role="status" aria-live="polite"></p>
-<section id="rules">
-<div class="section-head"><h2 id="rules-title">Models</h2><span id="enabled-count" class="muted" aria-live="polite"></span></div>
-<p class="muted" id="current-line"></p>
-<form id="settings-form"><fieldset id="fields" disabled>
-<label class="check" for="enabled"><input id="enabled" type="checkbox"><span id="enabled-label">Route before dispatch</span></label>
-<p id="models-empty" class="muted" hidden></p>
-<div class="model-list" id="models" aria-label="Model list"></div>
-<div class="field"><label for="fallback" id="fallback-label">Fallback</label><select id="fallback"></select></div>
-<fieldset class="style-choice"><legend class="muted" id="style-title">Style task policy</legend><div class="segmented" role="radiogroup" aria-labelledby="style-title"><label for="style-auto"><input id="style-auto" type="radio" name="style-policy" value="auto"><span id="style-auto-label">Automatic selection</span></label><label for="style-main"><input id="style-main" type="radio" name="style-policy" value="main"><span id="style-label">Current model · low</span></label></div><p class="muted style-hint" id="style-hint">This policy affects subagent dispatch only; it does not change the parent session.</p></fieldset>
-<details><summary id="advanced-label">Advanced</summary>
-<div class="field"><label for="confidence" id="confidence-label">Min confidence</label><input id="confidence" type="number" min="0" max="1" step="0.05" required></div>
-<div class="field"><label for="timeout" id="timeout-label">Timeout (ms)</label><input id="timeout" type="number" min="1000" max="30000" step="1" required></div>
-<div class="field"><label for="instructions" id="instructions-label">Extra instructions</label><textarea id="instructions" rows="3" maxlength="2000"></textarea></div>
-</details>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>pi-jev-route settings</title><link rel="stylesheet" href="/vendor/slimselect.css"><style>
+:root{--background:#f7f6f2;--foreground:#242622;--primary:#b53c23;--secondary:#efeee8;--muted:#63675f;--accent:#fae8de;--destructive:#aa3529;--border:#d6d8cf;--ring:#b53c23;--surface:#fffefa;--nav:#242824;--nav-muted:#b8bcb3;--shadow-color:#24262218;--radius-sm:3px;--radius-md:6px;--radius-lg:12px;--radius-full:999px;--text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:18px;--text-xl:24px;--text-title:32px;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--mono:"SFMono-Regular",Consolas,monospace;--sans:"Helvetica Neue","Avenir Next","PingFang SC",sans-serif;--shadow-sm:0 4px 12px var(--shadow-color);--ss-primary-color:var(--primary);--ss-bg-color:var(--surface);--ss-font-color:var(--foreground);--ss-border-color:var(--border);--ss-disabled-color:var(--secondary);--ss-border-radius:var(--radius-sm);--ss-main-height:40px;--ss-option-height:40px;--ss-animation-timing:0s}
+*{box-sizing:border-box}
+body{margin:0;background:var(--background);color:var(--foreground);font:var(--text-base)/1.5 var(--sans)}
+button,input,textarea,select{font:inherit;color:inherit;max-width:100%;min-width:0}
+button,input[type=number],textarea{border:1px solid var(--border);background:var(--surface);padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);min-height:40px}
+button{cursor:pointer;font-size:var(--text-sm)}
+button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--foreground);border-color:var(--foreground);color:var(--surface)}
+:focus-visible{outline:2px solid var(--ring);outline-offset:3px}
+[aria-invalid=true]{border-color:var(--destructive)!important}
+input[type=checkbox]{appearance:none;width:32px;height:20px;border:1px solid var(--muted);border-radius:var(--radius-full);background:var(--secondary);position:relative;flex:none;cursor:pointer;margin:0}
+input[type=checkbox]:after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:var(--radius-full);background:var(--muted)}
+input[type=checkbox]:checked{background:var(--foreground);border-color:var(--foreground)}
+input[type=checkbox]:checked:after{left:15px;background:var(--surface)}
+input[type=checkbox]:disabled{cursor:default;opacity:.5}
+input[type=radio]{accent-color:var(--primary);width:20px;height:20px;margin:0;flex:none}
+textarea{display:block;width:100%;resize:vertical;min-height:80px;font-size:var(--text-sm);line-height:1.5}
+input[type=number]{width:100%}
+.navigation{position:fixed;inset:0 auto 0 0;width:200px;background:var(--nav);color:var(--surface);padding:var(--space-8) var(--space-4);display:flex;flex-direction:column;gap:var(--space-12)}
+.brand{font-size:var(--text-title);font-weight:600;letter-spacing:-1px;padding-left:var(--space-3)}
+.navigation nav{display:grid;gap:var(--space-2)}
+.navigation button{text-align:left;border:0;background:transparent;color:var(--nav-muted);padding:var(--space-3);min-height:44px}
+.navigation button[aria-current=page]{background:var(--background);color:var(--foreground)}
+.navigation #service{margin-top:auto;color:var(--nav-muted);font-size:var(--text-xs);padding:var(--space-3);overflow-wrap:anywhere}
+main{margin-left:200px;padding:0 var(--space-8) var(--space-4);min-width:0}
+h1,h2,h3,p{margin:0}
+h1{font-size:var(--text-title);line-height:1.25;font-weight:500;margin-bottom:var(--space-6)}
+h2,h3{font-size:var(--text-lg);font-weight:500}
+.muted{font-size:var(--text-sm);color:var(--muted)}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);min-height:80px;border-bottom:1px solid var(--border);padding:var(--space-4) 0}
+#current-line{overflow-wrap:anywhere;min-width:0;color:var(--foreground)}
+.language-bar [role=group],.language-options{display:flex;align-items:center;gap:var(--space-2)}
+#language-label{font-size:var(--text-xs);color:var(--muted)}
+.language-bar button{font-size:var(--text-xs);min-height:32px;padding:var(--space-1) var(--space-2);white-space:nowrap;background:transparent}
+.language-bar button[aria-pressed=true]{background:var(--foreground);color:var(--surface);border-color:var(--foreground)}
+.status-row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-3) 0 var(--space-6);min-height:60px}
+.status{font-size:var(--text-sm);color:var(--muted);overflow-wrap:anywhere}
+.status.error,.error{color:var(--destructive)}
+#retry{min-height:32px}
+fieldset{padding:0;margin:0;border:0;min-width:0}
+.workspace,.history-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;border-top:1px solid var(--foreground)}
+.matrix,.history-list{min-width:0;padding-right:var(--space-8)}
+.policies,.route-detail{min-width:0;border-left:1px solid var(--border);padding:var(--space-6) 0 var(--space-6) var(--space-6)}
+.section-head,.toolbar,.actions{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap}
+.section-head{padding:var(--space-4) 0}
+.check{display:flex;align-items:center;gap:var(--space-3);min-height:40px;font-size:var(--text-sm)}
+.model-row{padding:var(--space-4) 0;border-bottom:1px solid var(--border);display:grid;gap:var(--space-3)}
+.model-row:has(input:not(:checked)) .model-name{color:var(--muted)}
+.model-row .check{align-items:flex-start;flex-direction:row-reverse;justify-content:space-between}
+.model-row .check>span{min-width:0;flex:1}
+.model-name{font-size:var(--text-lg);font-weight:500;overflow-wrap:anywhere}
+.model-id{display:block;font:var(--text-xs)/1.5 var(--mono);color:var(--muted);overflow-wrap:anywhere;margin-top:var(--space-1)}
+.badge{display:inline-block;font-size:var(--text-xs);color:var(--primary);margin-top:var(--space-1)}
+.model-controls label{display:block;font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--space-1)}
+.model-row textarea{background:transparent;min-height:64px;border-color:transparent;border-bottom-color:var(--border);padding:var(--space-2) 0}
+.model-row textarea:focus{background:var(--surface);border-color:var(--border);padding-inline:var(--space-2)}
+.matrix-note{padding:var(--space-4) 0}
+.policy-grid,.advanced-grid{display:grid;gap:var(--space-6);padding-top:var(--space-6)}
+.field,.policy-grid>*{min-width:0}
+.field .muted,.policy-grid .muted{margin-top:var(--space-2)}
+.coverage-note{border-top:1px solid var(--border);padding-top:var(--space-4);margin-top:var(--space-6)}
+.supervision-grid,.correction-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-8);padding:var(--space-6) 0;border-top:1px solid var(--border)}
+.supervision-grid{border-top-color:var(--foreground)}
+.supervision-grid .muted{margin-top:var(--space-2)}
+.timing-presets{margin-top:var(--space-6)}
+.timing-presets .actions{align-items:flex-start}
+.parameter-title{margin:var(--space-6) 0 var(--space-4)}
+.timing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-4) var(--space-6)}
+.option-help{margin-top:var(--space-6)}
+#coverage{border-top:1px solid var(--border);padding-top:var(--space-6);margin-top:var(--space-6)}
+.coverage-list{padding-left:var(--space-6);margin:var(--space-3) 0;font-size:var(--text-sm)}
+#coverage-boundaries{margin-top:var(--space-4);color:var(--muted)}
+.toolbar{margin:var(--space-2) 0 var(--space-6)}
+.toolbar label{display:grid;gap:var(--space-2);min-width:0;max-width:100%;font-size:var(--text-sm)}
+.toolbar .select-wrap{width:200px;max-width:100%}
+.scroll{max-width:100%;overflow:auto}
+#log-region,#task-region,#event-timeline{max-height:60vh;overflow:auto;overscroll-behavior:contain}
+.route-detail{position:sticky;top:var(--space-4);align-self:start;max-height:calc(100vh - var(--space-8));overflow:auto}
+.scroll thead{position:sticky;top:0;background:var(--background)}
+table{width:100%;border-collapse:collapse;text-align:left;font-size:var(--text-sm)}
+th,td{padding:var(--space-3) var(--space-2);border-bottom:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere}
+th{font-weight:400;color:var(--muted)}
+#logs-table{min-width:720px}
+#task-table{min-width:560px}
+td{max-width:240px}
+td button{font-size:var(--text-xs);padding:var(--space-1) var(--space-2);min-height:32px;margin-top:var(--space-2)}
+tr.selected{background:var(--secondary)}
+.audit{padding-bottom:var(--space-8)}
+#supervision-history{border-top:1px solid var(--border);padding-top:var(--space-6)}
+#supervision-history h3{margin-bottom:var(--space-4)}
+#task-region{margin-bottom:var(--space-8)}
+.timeline{display:grid;gap:var(--space-4)}
+.timeline article{border-top:1px solid var(--border);padding-top:var(--space-4);font-size:var(--text-sm);overflow-wrap:anywhere}
+.event-evidence{color:var(--muted);font-size:var(--text-xs);margin-top:var(--space-2);white-space:pre-wrap}
+#detail-empty{margin-top:var(--space-4)}
+#log-detail{font-size:var(--text-sm);margin:0;overflow-wrap:anywhere}
+#log-detail dt{color:var(--muted);margin-top:var(--space-4)}
+#log-detail dd{margin:var(--space-1) 0;white-space:pre-wrap}
+.savebar{border-top:1px solid var(--border);padding:var(--space-6) 0;margin-top:var(--space-8)}
+.actions{justify-content:flex-start}
+dialog{background:var(--background);color:var(--foreground);border:1px solid var(--border);border-radius:var(--radius-md);width:min(560px,calc(100% - 32px));padding:var(--space-6);max-height:85vh;overflow:auto}
+dialog::backdrop{background:var(--foreground);opacity:.6}
+dialog p{margin:var(--space-4) 0}
+dialog .actions{justify-content:flex-end;margin-top:var(--space-6)}
+#saved-toast{position:fixed;top:var(--space-4);right:var(--space-4);z-index:20;margin:0;padding:var(--space-3) var(--space-4);background:var(--foreground);color:var(--surface);font-size:var(--text-sm);box-shadow:var(--shadow-sm);opacity:0;pointer-events:none;transition:opacity .15s}
+#saved-toast[data-state=visible]{opacity:1}
+#saved-toast:empty,#saved-toast[data-state=hidden]{visibility:hidden}
+/* Existing page-select owns all select interaction. */
+.select-wrap{position:relative;display:block;min-width:0;max-width:100%}
+.select-wrap select{display:none!important}
+.select-unavailable{display:block;width:100%;text-align:left}
+.select-wrap .ss-main{font-size:var(--text-sm);padding:var(--space-2) var(--space-3);min-width:0;border-radius:var(--radius-sm)}
+.select-wrap .ss-main:focus-visible{outline:2px solid var(--ring);outline-offset:3px;box-shadow:none}
+.select-wrap .ss-main .ss-values .ss-single{padding:0;line-height:1.5;overflow-wrap:anywhere}
+.select-wrap .ss-main .ss-arrow{position:static;transform:none;flex:0 0 16px;width:16px;height:16px;margin:0 0 0 var(--space-3)}
+.ss-content{font:var(--text-sm)/1.5 var(--sans);border-radius:var(--radius-sm)!important;margin:0!important;box-shadow:var(--shadow-sm)}
+.ss-content .ss-list .ss-option{padding:var(--space-2) var(--space-3);overflow-wrap:anywhere;content-visibility:visible}
+.ss-content .ss-list .ss-option:hover:not(.ss-disabled){border-left:0}
+.ss-content .ss-list .ss-optgroup .ss-option{padding:var(--space-2) var(--space-4)}
+.ss-content .ss-list .ss-optgroup-label-text{font-size:var(--text-sm);overflow-wrap:anywhere}
+.ss-content .ss-list .ss-option.ss-disabled{color:var(--muted)}
+[hidden]{display:none!important}
+@media(hover:hover){button:hover:not(:disabled){border-color:var(--muted);background:var(--secondary)}.navigation button:hover:not([aria-current]){color:var(--surface);background:var(--muted)}button.primary:hover{background:var(--primary);border-color:var(--primary)}}
+@media(max-width:1100px){main{padding-inline:var(--space-6)}.matrix,.history-list{padding-right:var(--space-6)}.workspace,.history-layout{grid-template-columns:minmax(0,1fr) 280px}.section-head{align-items:flex-start}.timing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.navigation{position:static;width:100%;padding:var(--space-3) var(--space-4);gap:var(--space-3);flex-direction:row;align-items:center}.brand{font-size:var(--text-xl);padding:0}.navigation nav{display:flex;gap:var(--space-1);flex:1;justify-content:flex-end}.navigation button{font-size:var(--text-xs);padding:var(--space-2);min-height:40px}.navigation #service{display:none}main{margin:0;padding-inline:var(--space-4)}.page-head{gap:var(--space-2);min-height:72px}#language-label{display:none}#current-line{font-size:var(--text-xs)}.language-options{gap:var(--space-1)}.workspace,.history-layout{grid-template-columns:minmax(0,1fr)}.matrix,.history-list{padding:0}.policies,.route-detail{border-left:0;border-top:1px solid var(--foreground);padding:var(--space-6) 0}.supervision-grid,.correction-grid{grid-template-columns:minmax(0,1fr);gap:var(--space-6)}.timing-grid{gap:var(--space-4)}.route-detail{position:static;max-height:70vh;scroll-margin-top:var(--space-4)}h1{font-size:var(--text-xl)}.savebar .actions button{flex:1}.field>label{font-size:var(--text-xs)}}
+@media(max-width:700px){.timing-grid{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(forced-colors:active){input[type=checkbox]{appearance:auto}input[type=checkbox]:after{display:none}}
+</style></head><body><aside class="navigation"><span class="brand">Jev</span><nav aria-label="Navigation"><button type="button" data-view="routing" data-i18n="navRouting" aria-current="page">Models & routing</button><button type="button" data-view="supervision" data-i18n="navSupervision">Task supervision</button><button type="button" data-view="history" data-i18n="navHistory">History</button></nav><p id="service" class="muted">Local settings console</p></aside><main>
+<header class="page-head"><p id="current-line" class="muted"></p><div class="language-bar"><div role="group" aria-labelledby="language-label"><span id="language-label" data-i18n="language">Language</span><div class="language-options"><button id="lang-en" type="button" aria-pressed="true">English</button><button id="lang-zh" type="button" aria-pressed="false">简体中文</button></div></div></div></header>
+<div class="status-row"><p class="status" id="status" role="status" aria-live="polite">Loading settings…</p><button id="retry" type="button" hidden>Retry</button></div>
+<form id="settings-form" novalidate><fieldset id="fields" disabled>
+<div id="view-routing" data-panel="routing"><h1 data-i18n="navRouting">Models & routing</h1><div class="workspace"><section class="matrix" aria-labelledby="rules-title"><div class="section-head"><h2><span id="rules-title" data-i18n="models">Available models</span></h2><label class="check" for="enabled"><input id="enabled" type="checkbox"><span data-i18n="enabled">Route before dispatch</span></label></div><div id="models"></div><p id="models-empty" class="matrix-note muted" hidden></p><p id="enabled-count" class="matrix-note muted"></p></section>
+<aside class="policies"><h2><span data-i18n="policies">Routing policies</span></h2><div class="policy-grid"><div class="field"><label for="fallback" data-i18n="fallback">Fallback model</label><span class="select-wrap"><select id="fallback" aria-describedby="fallback-hint"></select><button class="select-unavailable" type="button" disabled>Unavailable / 不可用</button></span><p class="muted" id="fallback-hint"></p></div><fieldset><legend data-i18n="styleTitle">Style task policy</legend><label class="check" for="style-auto"><input id="style-auto" type="radio" name="style-policy" value="auto"><span data-i18n="styleAuto">Automatic selection</span></label><label class="check" for="style-main"><input id="style-main" type="radio" name="style-policy" value="main"><span data-i18n="styleMain">Current model · low</span></label><p class="muted" data-i18n="styleHint">Only affects subagents. Models without reasoning support use off.</p></fieldset></div>
+<section id="advanced"><div class="advanced-grid"><div class="field"><label for="confidence" data-i18n="confidence">Minimum confidence · 0–1</label><input id="confidence" type="number" min="0" max="1" step="any" required aria-describedby="confidence-help"><p class="muted" id="confidence-help"></p><p class="muted" data-i18n="confidenceHint">A selection threshold, not a success metric.</p></div><div class="field"><label for="timeout" data-i18n="timeout">Timeout · milliseconds</label><input id="timeout" type="number" min="1000" max="30000" step="1" required aria-describedby="timeout-help"><p class="muted" id="timeout-help"></p></div><div class="field"><label for="instructions" data-i18n="instructions">Extra instructions</label><textarea id="instructions" maxlength="2000" rows="3"></textarea><p class="muted" id="char-count">0 / 2000</p></div></div></section><p class="muted coverage-note" data-i18n="coverage"></p></aside></div></div>
+<section id="view-supervision" data-panel="supervision" hidden class="supervision-panel" aria-labelledby="supervision-title"><h1 id="supervision-title" data-i18n="navSupervision">Task supervision</h1><div class="supervision-grid"><fieldset><legend data-i18n="supervisionEnabled">Supervision switch</legend><label class="check" for="supervision-enabled"><input id="supervision-enabled" type="checkbox"><span data-i18n="supervisionEnabledLabel">Enable supervision</span></label><p class="muted" data-i18n="supervisionEnabledHint">Off stays off. On uses the full flow; it does not bypass takeover permission, model allowlists, exit proof, or caps.</p></fieldset><fieldset><legend data-i18n="targets">Observed targets</legend><label class="check" for="monitor-main"><input id="monitor-main" type="checkbox"><span data-i18n="monitorMain">Main session</span></label><label class="check" for="monitor-children"><input id="monitor-children" type="checkbox"><span data-i18n="monitorChildren">Native async children</span></label><label class="check" for="allow-takeover"><input id="allow-takeover" type="checkbox"><span data-i18n="allowTakeover">Allow main takeover</span></label><section class="option-help"><p class="muted" data-i18n="targetDetail">Main takeover is a separate opt-in. Foreign, external, nested, and unproven foreground work stay outside intervention. A whole Pi process crash is out of scope.</p></section></fieldset></div><section id="supervision-advanced"><div class="correction-grid"><div class="field"><label for="correction-model" data-i18n="correctionModel">Corrective model</label><span class="select-wrap"><select id="correction-model" aria-describedby="correction-model-hint"></select><button class="select-unavailable" type="button" disabled>Unavailable / 不可用</button></span><p class="muted" id="correction-model-hint" hidden></p></div><div class="field"><label for="correction-thinking" data-i18n="correctionThinking">Corrective thinking</label><span class="select-wrap"><select id="correction-thinking"><option value="high">high</option><option value="medium">medium</option><option value="low">low</option><option value="off">off</option></select><button class="select-unavailable" type="button" disabled>Unavailable / 不可用</button></span></div></div><fieldset class="timing-presets"><legend data-i18n="timingProfile"></legend><div class="actions"><label class="check"><input type="radio" name="timing-profile" value="adaptive" id="profile-adaptive"><span data-i18n="profileAdaptive"></span></label><label class="check"><input type="radio" name="timing-profile" value="quick" id="profile-quick"><span data-i18n="profileQuick"></span></label><label class="check"><input type="radio" name="timing-profile" value="long" id="profile-long"><span data-i18n="profileLong"></span></label><label class="check"><input type="radio" name="timing-profile" value="custom" id="profile-custom"><span data-i18n="profileCustom"></span></label></div><p class="muted" data-i18n="profileHint"></p></fieldset><section><h2 class="parameter-title" data-i18n="feedbackTitle"></h2><div class="timing-grid"><div class="field"><label for="feedback-after" data-i18n="feedbackAfter"></label><input id="feedback-after" type="number" required aria-describedby="feedback-after-help"><p class="muted" id="feedback-after-help"></p></div><div class="field"><label for="feedback-interval" data-i18n="feedbackInterval"></label><input id="feedback-interval" type="number" required aria-describedby="feedback-interval-help"><p class="muted" id="feedback-interval-help"></p></div><div class="field"><label for="poll-ms" data-i18n="pollMs"></label><input id="poll-ms" type="number" required aria-describedby="poll-ms-help"><p class="muted" id="poll-ms-help"></p></div></div></section><section><h2 class="parameter-title" data-i18n="stallTitle"></h2><div class="timing-grid"><div class="field"><label for="idle-ms" data-i18n="idleMs"></label><input id="idle-ms" type="number" required aria-describedby="idle-ms-help"><p class="muted" id="idle-ms-help"></p></div><div class="field"><label for="deep-ms" data-i18n="deepMs"></label><input id="deep-ms" type="number" required aria-describedby="deep-ms-help"><p class="muted" id="deep-ms-help"></p></div><div class="field"><label for="no-progress" data-i18n="noProgress"></label><input id="no-progress" type="number" required aria-describedby="no-progress-help"><p class="muted" id="no-progress-help"></p></div><div class="field"><label for="tool-stall" data-i18n="toolStall"></label><input id="tool-stall" type="number" required aria-describedby="tool-stall-help"><p class="muted" id="tool-stall-help"></p></div><div class="field"><label for="repeat-failure" data-i18n="repeatFailure"></label><input id="repeat-failure" type="number" required aria-describedby="repeat-failure-help"><p class="muted" id="repeat-failure-help"></p></div><div class="field"><label for="recheck-ms" data-i18n="recheckMs"></label><input id="recheck-ms" type="number" required aria-describedby="recheck-ms-help"><p class="muted" id="recheck-ms-help"></p></div><div class="field"><label for="review-ms" data-i18n="reviewMs"></label><input id="review-ms" type="number" required aria-describedby="review-ms-help"><p class="muted" id="review-ms-help"></p></div><div class="field"><label for="review-tools" data-i18n="reviewTools"></label><input id="review-tools" type="number" required aria-describedby="review-tools-help"><p class="muted" id="review-tools-help"></p></div></div></section><section><h2 class="parameter-title" data-i18n="budgetTitle"></h2><p class="muted" data-i18n="budgetHint"></p><div class="timing-grid"><div class="field"><label for="soft-budget" data-i18n="softBudget"></label><input id="soft-budget" type="number" required aria-describedby="soft-budget-help"><p class="muted" id="soft-budget-help"></p></div><div class="field"><label for="max-task-ms" data-i18n="maxTaskMs"></label><input id="max-task-ms" type="number" required aria-describedby="max-task-ms-help"><p class="muted" id="max-task-ms-help"></p></div><div class="field"><label for="handoff-ms" data-i18n="handoffMs"></label><input id="handoff-ms" type="number" required aria-describedby="handoff-ms-help"><p class="muted" id="handoff-ms-help"></p></div><div class="field"><label for="decision-timeout" data-i18n="decisionTimeout"></label><input id="decision-timeout" type="number" required aria-describedby="decision-timeout-help"><p class="muted" id="decision-timeout-help"></p></div><div class="field"><label for="max-recoveries" data-i18n="maxRecoveries"></label><input id="max-recoveries" type="number" required aria-describedby="max-recoveries-help"><p class="muted" id="max-recoveries-help"></p></div><div class="field"><label for="max-takeovers" data-i18n="maxTakeovers"></label><input id="max-takeovers" type="number" required aria-describedby="max-takeovers-help"><p class="muted" id="max-takeovers-help"></p></div><div class="field"><label for="max-interventions" data-i18n="maxInterventions"></label><input id="max-interventions" type="number" required aria-describedby="max-interventions-help"><p class="muted" id="max-interventions-help"></p></div><div class="field"><label for="max-checks" data-i18n="maxChecks"></label><input id="max-checks" type="number" required aria-describedby="max-checks-help"><p class="muted" id="max-checks-help"></p></div></div></section><section class="option-help"><p class="muted" data-i18n="timingDetail">Polling is local. Liveness is not silence: active tools, provider thinking, and waits defer intervention. Each review can bill the selected corrective model. Empty model means no correction. Caps and one in-flight action prevent repeated side effects.</p></section></section><ul id="coverage-boundaries" class="coverage-list"></ul><div id="coverage"><h3 data-i18n="coverageTitle">Coverage gaps</h3><ul class="coverage-list" id="coverage-list"></ul></div></section>
 </fieldset></form>
-</section>
-<details id="logs">
-<summary id="logs-summary"><span id="logs-title">Logs</span><span id="log-count" class="muted"></span></summary>
-<p id="empty" class="muted"></p>
-<div class="scroll" tabindex="0" role="region" aria-labelledby="logs-title"><table id="logs-table" hidden><thead><tr>
-<th scope="col" id="col-time">Time</th><th scope="col" id="col-agent">Agent</th><th scope="col" id="col-choice">Choice</th>
-<th scope="col" id="col-report">Reported</th><th scope="col" id="col-state">Status</th><th scope="col" id="col-reason">Reason</th>
-</tr></thead><tbody id="log-rows"></tbody></table></div>
-</details>
-</main>
+<section id="view-history" data-panel="history" hidden><h1 data-i18n="navHistory">History</h1><div class="history-layout"><div class="history-list"><section class="audit" id="logs"><div class="section-head"><h2 data-i18n="audit">Routing history</h2><span id="log-count" class="muted">0</span></div><div class="toolbar"><label for="filter"><span data-i18n="filter">Status filter</span><span class="select-wrap"><select id="filter"><option value="all">All statuses</option></select><button class="select-unavailable" type="button" disabled>Unavailable / 不可用</button></span></label><button id="refresh" type="button" data-i18n="refresh">Refresh logs ↻</button></div><p id="empty" class="muted">Loading records…</p><div class="scroll" tabindex="0" role="region" aria-label="Routing history" id="log-region"><table id="logs-table" hidden><thead><tr><th scope="col" data-i18n="time">Time</th><th scope="col" data-i18n="agent">Agent</th><th scope="col" data-i18n="choice">Choice</th><th scope="col" data-i18n="reported">Reported</th><th scope="col" data-i18n="outcome">Status</th><th scope="col" data-i18n="reason">Reason / inspect</th></tr></thead><tbody id="log-rows"></tbody></table></div></section>
+<div class="audit" id="supervision-history"><h3 data-i18n="taskHistory">Task history</h3><p class="muted" id="supervision-empty"></p><div class="scroll" tabindex="0" role="region" id="task-region" aria-label="Task history"><table id="task-table" hidden><thead><tr><th scope="col" data-i18n="taskTime">Updated</th><th scope="col" data-i18n="taskTarget">Target</th><th scope="col" data-i18n="taskPhase">Phase</th><th scope="col" data-i18n="taskReason">Reason</th><th scope="col" data-i18n="taskCounts">Counts</th><th scope="col" data-i18n="budgetFacts"></th></tr></thead><tbody id="task-rows"></tbody></table></div><h3 id="event-title" data-i18n="eventTimeline">Audit timeline</h3><div id="event-timeline" class="timeline" tabindex="0" role="region" aria-labelledby="event-title"></div></div></div><aside class="route-detail" tabindex="0" aria-labelledby="log-title"><h2 id="log-title" data-i18n="detail">Route details</h2><p id="detail-empty" class="muted" data-i18n="detailEmpty">Select a routing record.</p><dl id="log-detail"></dl></aside></div></section><div class="savebar"><div class="actions"><button type="button" id="reload" data-i18n="reload">Reload settings</button><button type="button" id="reset" data-i18n="reset" disabled>Restore defaults</button></div></div></main><dialog id="confirm-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title"></h2><p id="confirm-copy"></p><div class="actions"><button id="cancel-confirm" type="button" data-i18n="cancel">Cancel</button><button id="accept-confirm" class="primary" type="button" data-i18n="confirm">Confirm</button></div></dialog>
+<p id="saved-toast" data-state="hidden" role="status" aria-live="polite"></p>
+<script src="/vendor/slimselect.js"></script>
+<script src="/vendor/page-select.js"></script>
 <script>
 (() => {
-  'use strict';
-  const token = location.hash.slice(1);
-  history.replaceState(null, '', location.pathname + location.search);
-  const $ = id => document.getElementById(id);
-  const ui = {
-    zh: {
-      localeLabel:'语言', refresh:'刷新', subtitle:'为子代理派发选择合适模型，并保留本地决策记录。', rules:'模型', enabled:'启用派发前选型',
-      allow:'启用', current:'当前主模型',
-      fallback:'回退模型', fallbackAuto:'自动：low 或当前允许模型', fallbackGone:'（当前不可用）',
-      styleTitle:'样式任务策略', styleAuto:'自动选型', styleMain:'当前模型 · low', styleHint:'此策略仅影响子代理派发，不改变主会话。', enabledCount:n=>`已启用 ${n} 个模型`, modelList:'模型列表', details:'编辑说明',
-      advanced:'高级', minConfidence:'最低置信度',
-      timeout:'超时（毫秒）', instructions:'补充指令', logs:'日志', empty:'暂无日志。',
-      emptyModels:'enabledModels 为空。', currentLine:'主模型 ',
-      outcomes:{selected:'已选型',fallback:'已回退',explicit:'显式指定',blocked:'已阻止',skipped:'已跳过',error:'错误'},
-      cols:{time:'时间',agent:'Agent',choice:'选型',report:'报告',state:'状态',reason:'原因'},
-      unreported:'未报告', score:'置信度',
-      reading:'正在读取…', synced:'已同步。', syncing:'正在同步…',
-      fileError:'设置文件读取失败，请修复后刷新。',
-      auth:'缺少认证信息，请重新执行 /pi-jev-route-setting。',
-      connect:'连接失败，请重新执行 /pi-jev-route-setting。',
-      expire:'认证失效，请重新执行 /pi-jev-route-setting。',
-      request:'请求失败，未保存。', incomplete:'服务返回不完整，未保存。',
-      conflict:'设置已在别处修改，已重新读取。', invalid:'输入无效，未同步。'
-    },
-    en: {
-      localeLabel:'Language', refresh:'Refresh', subtitle:'Choose suitable models for subagents and keep a local decision log.', rules:'Models', enabled:'Route before dispatch',
-      allow:'Enabled', current:'Main model',
-      fallback:'Fallback', fallbackAuto:'Auto: low or an allowed model', fallbackGone:'(unavailable)',
-      styleTitle:'Style task policy', styleAuto:'Automatic selection', styleMain:'Current model · low', styleHint:'This policy affects subagent dispatch only; it does not change the parent session.', enabledCount:n=>`${n} models enabled`, modelList:'Model list', details:'Edit description',
-      advanced:'Advanced', minConfidence:'Min confidence',
-      timeout:'Timeout (ms)', instructions:'Extra instructions', logs:'Logs', empty:'No logs yet.',
-      emptyModels:'enabledModels is empty.', currentLine:'Parent ',
-      outcomes:{selected:'Selected',fallback:'Fallback',explicit:'Explicit',blocked:'Blocked',skipped:'Skipped',error:'Error'},
-      cols:{time:'Time',agent:'Agent',choice:'Choice',report:'Reported',state:'Status',reason:'Reason'},
-      unreported:'Not reported', score:'confidence',
-      reading:'Loading…', synced:'Synced.', syncing:'Syncing…',
-      fileError:'Settings file unreadable. Fix it, then refresh.',
-      auth:'Missing auth. Run /pi-jev-route-setting again.',
-      connect:'Connection failed. Run /pi-jev-route-setting again.',
-      expire:'Auth expired. Run /pi-jev-route-setting again.',
-      request:'Request failed. Not saved.', incomplete:'Incomplete response. Not saved.',
-      conflict:'Settings changed elsewhere. Reloaded.', invalid:'Invalid input. Not synced.'
+    'use strict';
+    const token = location.hash.slice(1);
+    history.replaceState(null, '', location.pathname + location.search);
+    const $ = id => document.getElementById(id);
+    const ui = {
+        en: {
+            budgetFacts: "Budget / waiting facts", lastFeedback: 'Latest feedback',
+            pausedTime: "Paused time",
+            failures: "Consecutive failures",
+            unknownProgress: "Progress unknown",
+            deadlineNotified: "Automatic intervention stopped; observation continues",
+            softNotified: "Expected budget reminder sent",
+            pausedBudget: "Budget paused",
+            unsupportedTiming: "This interface does not expose this setting; reference default only.",
+            budgetHint: "The expected budget only triggers a reminder. The intervention limit stops automatic intervention, continues observation and never forcibly ends the task.",
+            deepInvalid: "Deep-thinking idle must be at least idle before suspect.",
+            requiredNumber: "Enter a number.",
+            integerHint: "Enter a whole number.",
+            precisionHint: "Must resolve to whole milliseconds.",
+            rangeLabel: "Range",
+            suggested: "Suggested",
+            counts: "count",
+            minutes: "minutes",
+            seconds: "seconds",
+            instructionsPlaceholder: "For example: prefer lower-cost models; prioritize code reasoning for changes across multiple files.",
+            softBudget: "Expected time budget · minutes",
+            repeatFailure: "Consecutive failures of one tool",
+            toolStall: "Tool observation threshold · seconds",
+            noProgress: "No reliable progress · seconds",
+            feedbackInterval: "Feedback interval · seconds",
+            feedbackAfter: "First feedback · seconds",
+            profileHint: "Uses observed thinking, tool and waiting states. Time alone never interrupts a task. Presets do not infer task size from natural language.",
+            profileCustom: "Custom",
+            profileLong: "Long task",
+            profileQuick: "Short task",
+            profileAdaptive: "Automatic by state (recommended)",
+            timingProfile: "Timing profile",
+            budgetTitle: "Task budget & recovery",
+            stallTitle: "Stall detection",
+            feedbackTitle: "Progress feedback",
+            navRouting: 'Models & routing', navSupervision: 'Task supervision', navHistory: 'History', observationTiming: 'Observation timing', recoveryLimits: 'Correction & recovery limits', detailEmpty: 'Select a routing record.', eventEmpty: 'No audit events yet.', language: 'Language', title: 'pi-jev-route settings', coverage: 'Routes structured subagent tasks, including async dispatch. Other dispatch paths may be outside coverage.', models: 'Available models', addModel: 'Add a model', addPlaceholder: 'Search all models', addHint: 'Search the full catalog and add a model. Added models stay in Pi’s enabled list.', addEmpty: 'Every catalog model is already listed.', addNone: 'No models match this search.', addFailed: 'Could not add that model. The current list is unchanged.', enabled: 'Route before dispatch', policies: 'Routing policies', fallback: 'Fallback model', fallbackAuto: 'Auto / low → current parent', fallbackHint: 'Uses an enabled low alias, then the enabled parent model. Blocks dispatch if neither is available.', fallbackInvalid: 'Choose an enabled, available fallback or Auto.', unavailable: 'unavailable', styleTitle: 'Style task policy', styleAuto: 'Automatic selection', styleMain: 'Current model · low', styleHint: 'Only affects subagents. Models without reasoning support use off.', confidence: 'Minimum confidence · 0–1', confidenceHint: 'A selection threshold, not a success metric.', timeout: 'Timeout · seconds', instructions: 'Extra instructions', reload: 'Reload settings', reset: 'Restore defaults', savedToast: 'Saved', upToDate: 'No unsaved changes.', audit: 'Routing history', filter: 'Status filter', refresh: 'Refresh logs ↻', time: 'Time', agent: 'Agent', choice: 'Choice', reported: 'Reported', outcome: 'Status', reason: 'Reason / inspect', cancel: 'Cancel', confirm: 'Confirm', detail: 'Route details', all: 'All statuses', allow: 'Enable', description: 'Model description', descriptionPlaceholder: 'Describe the model’s strengths, speed, and cost to help Jev decide when to use it.', current: 'Current parent', parent: 'Parent session', none: 'Not available', emptyModels: 'No enabled models yet. Search above and add one.', count: n => `${n} models enabled`, reading: 'Loading settings…', refreshing: 'Refreshing logs…', saving: 'Saving settings…', saved: 'Settings saved.', loaded: 'Settings loaded.', logsRefreshed: 'Logs refreshed. Your settings edits are preserved.', restored: 'Defaults restored.', fileError: 'Settings could not be read. Repair the configuration, then reload.', auth: 'Missing authentication. Run /pi-jev-route-setting again.', connect: 'Connection failed. Your edits are preserved. Run /pi-jev-route-setting again if the local server has closed.', expired: 'Authentication expired. Your edits are preserved. Run /pi-jev-route-setting again.', request: 'Request failed. Your edits are preserved; save was not confirmed.', incomplete: 'Incomplete server response. Your edits are preserved.', conflict: 'Settings changed elsewhere. Your edits are preserved. Reload settings explicitly before saving again.', boot: 'Settings could not be displayed. Retry, or run /pi-jev-route-setting again.', retry: 'Retry', invalid: 'Review the highlighted fields. Nothing has been saved.', confidenceInvalid: 'Enter a number from 0 to 1.', timeoutInvalid: "Enter 1 to 30 seconds, with millisecond precision.", lengthInvalid: 'This text exceeds the allowed length.', resetTitle: 'Restore default settings?', resetCopy: 'Restore routing policies and model descriptions to their defaults. Your interface language stays the same.', reloadTitle: 'Discard these edits?', reloadCopy: 'Reload the latest saved settings and discard edits that have not been saved yet.', empty: 'No routing records yet.', emptyFiltered: 'No records match this status.', logsUnknown: 'Routing records have not been loaded.', unreported: 'Not reported', inspect: 'Inspect record ↗', stageCandidates: 'Candidate snapshot', score: 'Confidence', duration: 'Duration (ms)', fallbackSource: 'Fallback source', reasonCode: 'Reason code', recordId: 'Record ID', session: 'Session ID', run: 'Run ID', async: 'Async ID', note: 'Saved note', execution: 'Execution state', actualStatus: 'Reported status', keyReady: 'Jev credentials available · local console', keyMissing: 'Jev credentials unavailable · routing may use local fallback', serviceUnknown: 'Local console · connection not established', auditLabel: 'Routing history', states: { selected: 'Selected', fallback: 'Fallback', explicit: 'Explicit', blocked: 'Blocked', skipped: 'Skipped', error: 'Error', not_started: 'Not started', accepted: 'Accepted', running: 'Running', completed: 'Completed', failed: 'Failed', unknown: 'Unknown' }, supervision: 'Task supervision', supervisionEnabled: 'Supervision switch', supervisionEnabledLabel: 'Enable supervision', supervisionEnabledHint: 'Off stays off. On uses the full flow; it does not bypass takeover permission, model allowlists, exit proof, or caps.', targets: 'Observed targets', monitorMain: 'Main session', monitorChildren: 'Native async children', allowTakeover: 'Allow main takeover', targetDetail: 'Main takeover is a separate opt-in. Foreign, external, nested, and unproven foreground work stay outside intervention. A whole Pi process crash is out of scope.', correctionModel: 'Corrective model', correctionThinking: 'Corrective thinking', correctionNone: 'None · no silent fallback', correctionInvalid: 'Choose an enabled model or None. Empty never falls back.', pollMs: 'Local poll · seconds', idleMs: 'Idle before suspect · seconds', deepMs: 'Deep-thinking idle · seconds', recheckMs: 'Recheck · seconds', reviewMs: 'Semantic review interval · seconds', reviewTools: 'Review every N new tools', handoffMs: 'Handoff wait · seconds', maxRecoveries: 'Max recoveries', maxTakeovers: 'Max takeovers', maxInterventions: 'Max interventions', maxTaskMs: "Automatic intervention limit · minutes", decisionTimeout: 'Decision timeout · seconds', maxChecks: 'Max checks per task', timingDetail: 'Polling is local. Active tools, provider thinking, and waits are not silence. Reviews can bill the selected model. Empty model never falls back. Only one intervention runs at a time. The total cap also limits recoveries and takeovers.', coverageTitle: 'Coverage gaps', taskHistory: 'Task history', eventTimeline: 'Audit timeline', taskTime: 'Updated', taskTarget: 'Target', taskPhase: 'Phase', taskReason: 'Reason', taskCounts: 'Counts', supervisionEmpty: 'No supervised tasks yet.', supervisionUnknown: 'Task history has not been loaded.', numberInvalid: 'Enter a whole number inside the shown range.', modes: { observe: 'Observe', correct: 'Correct', recover: 'Recover' }, phases: { running: 'Running', suspect: 'Suspect', waiting: 'Waiting', correcting: 'Correcting', recovering: 'Recovering', completed: 'Completed', stopped: 'Stopped', blocked: 'Blocked', degraded: 'Degraded', unknown: 'Unknown' }, coverageItems: ['Foreign or external runners are reported, not corrected.', 'Nested children are covered only when this extension is loaded there.', 'Foreground replacement requires observed process-terminal proof.', 'A crashed Pi process cannot be supervised from inside that process.'],
+            sources: { configured: 'Configured model', low_alias: 'Low alias', main: 'Parent model', none: 'None' }
+        },
+        zh: {
+            budgetFacts: "预算 / 等待事实", lastFeedback: '最近反馈',
+            pausedTime: "暂停累计",
+            failures: "连续失败",
+            unknownProgress: "进展不可观测",
+            deadlineNotified: "已停止自动干预，继续观察",
+            softNotified: "已提醒预计预算",
+            pausedBudget: "预算已暂停",
+            unsupportedTiming: "当前接口未提供此参数，仅显示参考默认值。",
+            budgetHint: "预计预算到时只提醒；自动干预时限到时停止自动干预，继续观察，不强制终止任务。",
+            deepInvalid: "深度思考空闲不得小于疑似停滞前空闲。",
+            requiredNumber: "请填写数值。",
+            integerHint: "请输入整数。",
+            precisionHint: "需对应整数毫秒。",
+            rangeLabel: "范围",
+            suggested: "建议",
+            counts: "次",
+            minutes: "分钟",
+            seconds: "秒",
+            instructionsPlaceholder: "例如：优先低成本模型；涉及多文件修改时重视代码推理能力。",
+            softBudget: "预计时间预算 · 分钟",
+            repeatFailure: "同工具连续失败次数",
+            toolStall: "工具观察阈值 · 秒",
+            noProgress: "无可靠进展阈值 · 秒",
+            feedbackInterval: "反馈间隔 · 秒",
+            feedbackAfter: "首次反馈 · 秒",
+            profileHint: "按已观测的思考、工具和等待状态判断；仅超过时间不会直接中断任务。快捷配置不会自动识别自然语言任务大小。",
+            profileCustom: "自定义",
+            profileLong: "长任务",
+            profileQuick: "小任务",
+            profileAdaptive: "自动按场景（推荐）",
+            timingProfile: "时间策略",
+            budgetTitle: "任务预算与恢复",
+            stallTitle: "停滞检测",
+            feedbackTitle: "进度反馈",
+            supervision: '任务监督', supervisionEnabled: '监督开关', supervisionEnabledLabel: '启用监督', supervisionEnabledHint: '关闭保持关闭。开启后使用完整流程，不绕过接管权限、模型允许列表、退出证明或次数上限。', targets: '观察对象', monitorMain: '主会话', monitorChildren: '原生异步子代理', allowTakeover: '允许接管主会话', targetDetail: '主会话接管是单独选项。外部、嵌套和未证明结束的前台工作不干预。整个 Pi 进程崩溃不在范围内。', correctionModel: '纠正模型', correctionThinking: '纠正思考强度', correctionNone: '无 · 不静默回退', correctionInvalid: '请选择已启用模型或无。留空不会回退。', pollMs: '本地轮询 · 秒', idleMs: '疑似停滞前空闲 · 秒', deepMs: '深度思考空闲 · 秒', recheckMs: '复查间隔 · 秒', reviewMs: '语义复查间隔 · 秒', reviewTools: '每新增 N 个工具复查', handoffMs: '交接等待 · 秒', maxRecoveries: '最大恢复次数', maxTakeovers: '最大接管次数', maxInterventions: '最大干预次数', maxTaskMs: "自动干预时限 · 分钟", decisionTimeout: '决策超时 · 秒', maxChecks: '每任务最大检查次数', timingDetail: '轮询只在本地。活跃工具、提供方思考和等待不算停滞。复查可能向所选模型计费。模型留空不回退。同一时刻只执行一次干预，总上限同时约束恢复与接管。', coverageTitle: '覆盖缺口', taskHistory: '任务历史', eventTimeline: '审计时间线', taskTime: '更新时间', taskTarget: '对象', taskPhase: '阶段', taskReason: '原因', taskCounts: '计数', supervisionEmpty: '暂无受监督任务。', supervisionUnknown: '尚未读取任务历史。', numberInvalid: '请输入所示范围内的整数。', modes: { observe: '观察', correct: '纠正', recover: '恢复' }, phases: { running: '运行中', suspect: '疑似停滞', waiting: '等待中', correcting: '纠正中', recovering: '恢复中', completed: '已完成', stopped: '已停止', blocked: '已阻塞', degraded: '降级', unknown: '未知' }, coverageItems: ['外部 runner 只报告，不纠正。', '嵌套子代理仅在其中加载本扩展时才覆盖。', '替换前台任务必须先观察到进程已结束的证明。', '整个 Pi 进程崩溃无法由该进程内部监督。'],
+            navRouting: '模型与路由', navSupervision: '任务监督', navHistory: '历史记录', observationTiming: '观察时序', recoveryLimits: '纠正与恢复限额', detailEmpty: '选择一条路由记录查看详情。', eventEmpty: '暂无审计事件。', language: '语言', title: 'pi-jev-route 设置', coverage: '覆盖结构化子代理单任务及异步派发，其他派发路径可能不在覆盖范围内。', models: '可用模型', addModel: '添加模型', addPlaceholder: '搜索全部模型', addHint: '可搜索全部模型并添加。添加后会保留在 Pi 的启用列表中。', addEmpty: '目录中的模型都已列出。', addNone: '没有匹配的模型。', addFailed: '无法添加该模型，当前列表未改变。', enabled: '启用派发前选型', policies: '调度策略', fallback: '回退模型', fallbackAuto: '自动 / low → 当前主模型', fallbackHint: '优先使用已启用的 low 别名，再使用已启用的主模型；两者均不可用时阻止派发。', fallbackInvalid: '请选择已启用且可用的回退模型，或自动回退。', unavailable: '当前不可用', styleTitle: '样式任务策略', styleAuto: '自动选型', styleMain: '当前模型 · 低思考', styleHint: '仅影响子代理；不支持思考强度的模型使用关闭思考。', confidence: '最低置信度 · 0–1', confidenceHint: '这是选型阈值，不是成功率指标。', timeout: '超时 · 秒', instructions: '补充指令', reload: '重新读取设置', reset: '恢复默认', savedToast: '已保存', upToDate: '没有未保存的更改。', audit: '路由历史', filter: '状态筛选', refresh: '刷新日志 ↻', time: '时间', agent: '代理', choice: '选型', reported: '执行报告', outcome: '状态', reason: '原因 / 检视', cancel: '取消', confirm: '确认', detail: '路由详情', all: '全部状态', allow: '启用', description: '模型说明', descriptionPlaceholder: '填写模型擅长的任务、速度和成本，帮助 Jev 判断何时选用。', current: '当前主模型', parent: '主会话模型', none: '暂无信息', emptyModels: '还没有启用的模型。请在上方搜索并添加。', count: n => `${n} 个模型已启用`, reading: '正在读取设置…', refreshing: '正在刷新日志…', saving: '正在保存设置…', saved: '设置已保存。', loaded: '设置已读取。', logsRefreshed: '日志已刷新，设置编辑已保留。', restored: '已恢复默认。', fileError: '无法读取设置，请修复配置后重新读取。', auth: '缺少认证信息，请重新执行 /pi-jev-route-setting。', connect: '连接失败，编辑已保留。若本地服务已关闭，请重新执行 /pi-jev-route-setting。', expired: '认证已失效，编辑已保留。请重新执行 /pi-jev-route-setting。', request: '请求失败，编辑已保留，尚未确认保存成功。', incomplete: '服务返回不完整，编辑已保留。', conflict: '设置已在别处修改，编辑已保留。再次保存前，请明确选择重新读取设置。', boot: '设置无法显示。请重试，或重新执行 /pi-jev-route-setting。', retry: '重试', invalid: '请检查标记的字段，尚未保存。', confidenceInvalid: '请输入 0 到 1 之间的数字。', timeoutInvalid: "请输入 1 到 30 秒，精确到毫秒。", lengthInvalid: '文本超过允许长度。', resetTitle: '恢复默认设置？', resetCopy: '将路由策略与模型说明恢复为默认值，保留当前界面语言。', reloadTitle: '放弃这些修改？', reloadCopy: '重新读取最新已保存的设置，并放弃尚未保存的编辑。', empty: '暂无路由记录。', emptyFiltered: '此状态下没有记录。', logsUnknown: '尚未读取路由记录。', unreported: '未报告', inspect: '检视记录 ↗', stageCandidates: '候选快照', score: '置信度', duration: '耗时（毫秒）', fallbackSource: '回退来源', reasonCode: '原因代码', recordId: '记录编号', session: '会话编号', run: '运行编号', async: '异步编号', note: '已存备注', execution: '执行状态', actualStatus: '报告状态', keyReady: 'Jev 凭证可用 · 本地控制台', keyMissing: 'Jev 凭证不可用 · 路由可能使用本地回退', serviceUnknown: '本地控制台 · 尚未建立连接', auditLabel: '路由历史', states: { selected: '已选型', fallback: '已回退', explicit: '显式指定', blocked: '已阻止', skipped: '已跳过', error: '错误', not_started: '未启动', accepted: '已受理', running: '运行中', completed: '已完成', failed: '失败', unknown: '未知' }, sources: { configured: '配置模型', low_alias: 'low 别名', main: '主模型', none: '无' }
+        }
+    };
+    let locale = 'en', snapshot = null, etag = '', baseline = '', busy = false, conflicted = false, statusKey = 'reading', statusError = false, confirmAction = null, detailLog = null, modelBase = {}, saveTimer = 0, toastTimer = 0, saveQueued = false, saveGeneration = 0, savingDraft = false;
+    const modelInputs = new Map();
+    const L = () => ui[locale];
+    const makeSelect = id => window.pageSelect?.($(id)) || {rebuild: fn => fn(), lock() {}, close() {}};
+    const fallbackSelect = makeSelect('fallback'), filterSelect = makeSelect('filter'), modelSelect = makeSelect('correction-model'), thinkingSelect = makeSelect('correction-thinking');
+    const numericFields = [
+        {"id": "feedback-after", "key": "feedbackAfterMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 30000, "label": "feedbackAfter", "group": "feedback", "scope": "supervision"},
+        {"id": "feedback-interval", "key": "feedbackIntervalMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 60000, "label": "feedbackInterval", "group": "feedback", "scope": "supervision"},
+        {"id": "poll-ms", "key": "pollMs", "scale": 1000, "min": 1000, "max": 60000, "defaultValue": 5000, "label": "pollMs", "group": "feedback", "scope": "supervision"},
+        {"id": "idle-ms", "key": "idleMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 45000, "label": "idleMs", "group": "stall", "scope": "supervision"},
+        {"id": "deep-ms", "key": "deepThinkingIdleMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 120000, "label": "deepMs", "group": "stall", "scope": "supervision"},
+        {"id": "no-progress", "key": "noProgressMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 180000, "label": "noProgress", "group": "stall", "scope": "supervision"},
+        {"id": "tool-stall", "key": "toolStallMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 300000, "label": "toolStall", "group": "stall", "scope": "supervision"},
+        {"id": "repeat-failure", "key": "repeatFailureLimit", "scale": 1, "min": 2, "max": 20, "defaultValue": 3, "label": "repeatFailure", "group": "stall", "scope": "supervision"},
+        {"id": "recheck-ms", "key": "recheckMs", "scale": 1000, "min": 1000, "max": 300000, "defaultValue": 15000, "label": "recheckMs", "group": "stall", "scope": "supervision"},
+        {"id": "review-ms", "key": "reviewIntervalMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 120000, "label": "reviewMs", "group": "stall", "scope": "supervision"},
+        {"id": "review-tools", "key": "reviewEveryTools", "scale": 1, "min": 1, "max": 1000, "defaultValue": 8, "label": "reviewTools", "group": "stall", "scope": "supervision"},
+        {"id": "soft-budget", "key": "softBudgetMs", "scale": 60000, "min": 1000, "max": 86400000, "defaultValue": 600000, "label": "softBudget", "group": "budget", "scope": "supervision"},
+        {"id": "max-task-ms", "key": "maxTaskMs", "scale": 60000, "min": 1000, "max": 86400000, "defaultValue": 1800000, "label": "maxTaskMs", "group": "budget", "scope": "supervision"},
+        {"id": "handoff-ms", "key": "handoffMs", "scale": 1000, "min": 1000, "max": 3600000, "defaultValue": 5000, "label": "handoffMs", "group": "budget", "scope": "supervision"},
+        {"id": "decision-timeout", "key": "decisionTimeoutMs", "scale": 1000, "min": 1000, "max": 30000, "defaultValue": 5000, "label": "decisionTimeout", "group": "budget", "scope": "supervision"},
+        {"id": "max-recoveries", "key": "maxRecoveries", "scale": 1, "min": 0, "max": 100, "defaultValue": 2, "label": "maxRecoveries", "group": "budget", "scope": "supervision"},
+        {"id": "max-takeovers", "key": "maxTakeovers", "scale": 1, "min": 0, "max": 100, "defaultValue": 1, "label": "maxTakeovers", "group": "budget", "scope": "supervision"},
+        {"id": "max-interventions", "key": "maxInterventions", "scale": 1, "min": 0, "max": 100, "defaultValue": 3, "label": "maxInterventions", "group": "budget", "scope": "supervision"},
+        {"id": "max-checks", "key": "maxChecksPerTask", "scale": 1, "min": 1, "max": 1000, "defaultValue": 30, "label": "maxChecks", "group": "budget", "scope": "supervision"},
+        {"id": "timeout", "key": "timeoutMs", "scale": 1000, "min": 1000, "max": 30000, "defaultValue": 5000, "label": "timeout", "scope": "routing"},
+        {"id": "confidence", "key": "confidenceThreshold", "scale": 1, "min": 0, "max": 1, "defaultValue": 0.55, "label": "confidence", "scope": "routing", "fraction": true}
+    ];
+    const supervisionFields = numericFields.filter(field => field.scope === 'supervision');
+    // Mirrors SUPERVISION_TIMING_PRESETS; profiles are UI shortcuts, never API fields.
+    const timingPresets = {"adaptive": {"feedbackAfterMs": 30000, "feedbackIntervalMs": 60000, "pollMs": 5000, "idleMs": 45000, "deepThinkingIdleMs": 120000, "noProgressMs": 180000, "toolStallMs": 300000, "repeatFailureLimit": 3, "recheckMs": 15000, "softBudgetMs": 600000, "maxTaskMs": 1800000, "handoffMs": 5000}, "quick": {"feedbackAfterMs": 30000, "feedbackIntervalMs": 60000, "pollMs": 5000, "idleMs": 30000, "deepThinkingIdleMs": 90000, "noProgressMs": 60000, "toolStallMs": 180000, "repeatFailureLimit": 3, "recheckMs": 15000, "softBudgetMs": 120000, "maxTaskMs": 1800000, "handoffMs": 5000}, "long": {"feedbackAfterMs": 30000, "feedbackIntervalMs": 60000, "pollMs": 5000, "idleMs": 90000, "deepThinkingIdleMs": 300000, "noProgressMs": 600000, "toolStallMs": 900000, "repeatFailureLimit": 3, "recheckMs": 15000, "softBudgetMs": 1800000, "maxTaskMs": 7200000, "handoffMs": 5000}};
+    let profileEdited = false;
+    function supported(field) { return field.scope === 'routing' || Object.hasOwn(snapshot?.settings.supervision || {}, field.key) || Object.hasOwn(snapshot?.defaults?.supervision || {}, field.key); }
+    function defaultNumber(field) { return (field.scope === 'routing' ? snapshot?.defaults?.[field.key] : snapshot?.defaults?.supervision?.[field.key]) ?? field.defaultValue; }
+    function readNumber(field) {
+        const input = $(field.id);
+        if (input.value.trim() === '' || input.validity.badInput) return null;
+        const value = Number(input.value) * field.scale;
+        if (!Number.isFinite(value)) return null;
+        if (field.fraction) return value;
+        const rounded = Math.round(value);
+        return Math.abs(value - rounded) <= Number.EPSILON * Math.max(1, Math.abs(value)) * 8 ? rounded : null;
     }
-  };
-  let snapshot = null, etag = '', busy = false, locale = 'en', saveTimer = 0;
-  const modelInputs = new Map(), logRows = new Map();
-  const L = () => ui[locale] || ui.en;
-  const text = value => typeof value === 'string' ? value : value == null ? '—' : JSON.stringify(value);
-  function node(tag, value) { const el = document.createElement(tag); if (value !== undefined) el.textContent = text(value); return el; }
-  function status(message, error = false) { $('status').textContent = message; $('status').classList.toggle('error', error); }
-  function applyChrome() {
-    const t = L();
-    document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN';
-    $('locale-label').textContent = t.localeLabel;
-    $('page-subtitle').textContent = t.subtitle;
-    $('refresh').textContent = t.refresh;
-    $('rules-title').textContent = t.rules;
-    $('enabled-label').textContent = t.enabled;
-    $('fallback-label').textContent = t.fallback;
-    $('style-title').textContent = t.styleTitle;
-    $('style-auto-label').textContent = t.styleAuto;
-    $('style-label').textContent = t.styleMain;
-    $('style-hint').textContent = t.styleHint;
-    $('models').setAttribute('aria-label', t.modelList);
-    $('models-empty').textContent = t.emptyModels;
-    $('advanced-label').textContent = t.advanced;
-    $('confidence-label').textContent = t.minConfidence;
-    $('timeout-label').textContent = t.timeout;
-    $('instructions-label').textContent = t.instructions;
-    $('logs-title').textContent = t.logs;
-    $('empty').textContent = t.empty;
-    $('col-time').textContent = t.cols.time;
-    $('col-agent').textContent = t.cols.agent;
-    $('col-choice').textContent = t.cols.choice;
-    $('col-report').textContent = t.cols.report;
-    $('col-state').textContent = t.cols.state;
-    $('col-reason').textContent = t.cols.reason;
-    if (snapshot) {
-      $('current-line').textContent = t.currentLine + (text(snapshot.currentModel));
-      for (const fields of modelInputs.values()) {
-        fields.allowText.textContent = t.allow;
-        fields.enabled.setAttribute('aria-label', t.allow + ': ' + fields.model.id);
-        fields.currentLabel.textContent = t.current;
-        fields.description.setAttribute('aria-label', t.details + ': ' + (fields.model.name || fields.model.id));
-      }
-      updateModelCount();
-      fallbackOptions();
-      renderLogs(snapshot.logs);
+    function unit(field) { return field.scale === 60000 ? L().minutes : field.scale === 1000 ? L().seconds : field.fraction ? '' : L().counts; }
+    function rangeText(field) { return L().rangeLabel + ': ' + field.min / field.scale + '–' + field.max / field.scale + ' ' + unit(field) + (field.fraction ? '' : ' · ' + (field.scale > 1 ? L().precisionHint : L().integerHint)); }
+    function numericChrome() {
+        for (const field of numericFields) {
+            const input = $(field.id);
+            input.min = field.min / field.scale; input.max = field.max / field.scale;
+            input.step = field.scale > 1 || field.fraction ? 'any' : '1';
+            input.placeholder = L().suggested + ' ' + defaultNumber(field) / field.scale + ' ' + unit(field);
+        }
+        $('instructions').placeholder = L().instructionsPlaceholder;
     }
-  }
-  function lock(value) {
-    busy = value;
-    $('refresh').disabled = value || !token;
-    $('fields').disabled = value || !snapshot || !!snapshot.settingsError;
-    $('locale').disabled = value || !snapshot || !!snapshot.settingsError;
-  }
-  async function request(path, method = 'GET', body, version) {
-    const headers = {Authorization: 'Bearer ' + token};
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
-    if (version !== undefined) headers['If-Match'] = version;
-    let response;
-    try { response = await fetch(path, {method, headers, cache:'no-store', body: body === undefined ? undefined : JSON.stringify(body)}); }
-    catch { throw new Error(L().connect); }
-    if (!response.ok) {
-      const error = new Error(response.status === 401 || response.status === 403 ? L().expire : L().request);
-      error.status = response.status; throw error;
+    function updateProfile() {
+        const name = !profileEdited && Object.keys(timingPresets).find(name => Object.entries(timingPresets[name]).every(([key, value]) => {
+            const field = supervisionFields.find(field => field.key === key);
+            return supported(field) && readNumber(field) === value;
+        }) && supervisionFields.filter(field => !Object.hasOwn(timingPresets[name], field.key)).every(field => readNumber(field) === defaultNumber(field))) || 'custom';
+        document.querySelectorAll('[name="timing-profile"]').forEach(input => { input.checked = input.value === name; });
     }
-    const data = await response.json();
-    if (!data || !data.settings || !Array.isArray(data.models) || !Array.isArray(data.logs)) throw new Error(L().incomplete);
-    return {data, version:response.headers.get('ETag') || ''};
-  }
-  function fallbackOptions(selected = $('fallback').value) {
-    const t = L();
-    $('fallback').replaceChildren(new Option(t.fallbackAuto, ''));
-    for (const [id, fields] of modelInputs) if (fields.enabled.checked) $('fallback').append(new Option(id, id));
-    if (selected && ![...$('fallback').options].some(option => option.value === selected)) {
-      const option = new Option(selected + ' ' + t.fallbackGone, selected); option.disabled = true; $('fallback').append(option);
+    const text = value => typeof value === 'string' ? value : value == null ? '—' : JSON.stringify(value);
+    function node(tag, value) { const el = document.createElement(tag); if (value !== undefined)
+        el.textContent = text(value); return el; }
+    function status(key, error = false) { statusKey = key; statusError = error; const message = L()[key] || L().boot; const invalid = key === 'invalid' ? $('settings-form').querySelector('input:invalid,select:invalid,textarea:invalid') : null; $('status').textContent = message + (invalid?.validationMessage ? ' ' + invalid.validationMessage : ''); $('status').classList.toggle('error', error); const recoverable = ['connect', 'expired', 'request', 'incomplete', 'boot'].includes(key); $('retry').hidden = !recoverable; $('retry').textContent = L().retry; if (['connect', 'expired', 'auth'].includes(key) && $('service')) $('service').textContent = L().serviceUnknown; }
+    function stateName(value) { return L().states[value] || text(value); }
+    function payload() { const models = { ...modelBase }; for (const [id, f] of modelInputs)
+        Object.defineProperty(models, id, { value: { enabled: f.enabled.checked, description: f.description.value }, enumerable: true, configurable: true, writable: true }); const supervision = { ...snapshot.settings.supervision, enabled: $('supervision-enabled').checked, mode: 'recover', monitorMain: $('monitor-main').checked, monitorChildren: $('monitor-children').checked, allowMainTakeover: $('allow-takeover').checked, correctionModel: $('correction-model').value, correctionThinking: $('correction-thinking').value }; for (const field of supervisionFields) { if (supported(field)) supervision[field.key] = readNumber(field); else delete supervision[field.key]; } return { ...snapshot.settings, enabled: $('enabled').checked, fallbackModel: $('fallback').value, styleUseMain: $('style-main').checked, confidenceThreshold: readNumber(numericFields.find(field => field.id === 'confidence')), timeoutMs: readNumber(numericFields.find(field => field.id === 'timeout')), locale, instructions: $('instructions').value, models, supervision }; }
+    // Raw input values retain invalid drafts (for example an empty numeric field).
+    function fingerprint() { return JSON.stringify([payload(), numericFields.map(field => [$(field.id).value, $(field.id).validity.badInput])]); }
+    function dirty() { return !!snapshot && fingerprint() !== baseline; }
+    function setDisabled(el, disabled) { if (el.disabled !== disabled) el.disabled = disabled; }
+    function lock(value) { busy = value; const unavailable = !snapshot || !!snapshot.settingsError; const fieldsetDisabled = unavailable; const controlsDisabled = (value && !savingDraft) || unavailable; for (const el of $('fields').querySelectorAll('input, textarea, select, button')) setDisabled(el, controlsDisabled); $('fields').disabled = fieldsetDisabled; fallbackSelect.lock(controlsDisabled); modelSelect.lock(controlsDisabled); for (const field of supervisionFields) setDisabled($(field.id), controlsDisabled || !supported(field)); thinkingSelect.lock(controlsDisabled); filterSelect.lock(value || !snapshot); setDisabled($('lang-en'), value); setDisabled($('lang-zh'), value); setDisabled($('reload'), value || !token); setDisabled($('refresh'), value || !token); setDisabled($('reset'), value || unavailable || !snapshot.defaults || !snapshot.defaultModels); }
+    function update() { if (snapshot) {
+        $('enabled-count').textContent = L().count([...modelInputs.values()].filter(f => f.enabled.checked).length);
+        $('char-count').textContent = $('instructions').value.length + ' / 2000';
+        if (!busy && !conflicted && statusKey === 'invalid' && !dirty() && $('settings-form').checkValidity()) status('upToDate');
+    } lock(busy); }
+    function showSaved() { const toast = $('saved-toast'); toast.textContent = L().savedToast; toast.dataset.state = 'visible'; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.dataset.state = 'hidden'; }, 1800); }
+    function fallbackOptions(selected = $('fallback').value) { fallbackSelect.rebuild(() => { $('fallback').replaceChildren(new Option(L().fallbackAuto, '')); for (const [id, f] of modelInputs)
+        if (f.enabled.checked)
+            $('fallback').append(new Option(id, id)); const invalid = !!selected && !modelInputs.get(selected)?.enabled.checked; if (invalid)
+        { const missing = new Option(selected + ' · ' + L().unavailable, selected); missing.disabled = true; $('fallback').append(missing); } $('fallback').value = selected; $('fallback').setCustomValidity(invalid && $('enabled').checked ? L().fallbackInvalid : ''); $('fallback-hint').textContent = invalid ? L().fallbackInvalid : L().fallbackHint; $('fallback-hint').classList.toggle('error', invalid); }); }
+    function correctionOptions(selected = $('correction-model').value) { modelSelect.rebuild(() => { $('correction-model').replaceChildren(new Option(L().correctionNone, '')); for (const [id, f] of modelInputs) if (f.enabled.checked) $('correction-model').append(new Option(id, id)); const invalid = !!selected && !modelInputs.get(selected)?.enabled.checked; if (invalid) { const missing = new Option(selected + ' · ' + L().unavailable, selected); missing.disabled = true; $('correction-model').append(missing); } $('correction-model').value = selected; $('correction-model').setCustomValidity(invalid ? L().correctionInvalid : ''); $('correction-model-hint').textContent = invalid ? L().correctionInvalid : ''; $('correction-model-hint').hidden = !invalid; $('correction-model-hint').classList.toggle('error', invalid); }); }
+    function validate() {
+        fallbackOptions(); correctionOptions(); numericChrome();
+        for (const field of numericFields) {
+            const input = $(field.id), value = readNumber(field);
+            input.setCustomValidity('');
+            if (supported(field)) {
+                if (input.value === '') input.setCustomValidity(L().requiredNumber);
+                else if (value === null || value < field.min || value > field.max) input.setCustomValidity(rangeText(field));
+            }
+        }
+        const deep = numericFields.find(field => field.id === 'deep-ms'), idle = numericFields.find(field => field.id === 'idle-ms');
+        if (readNumber(deep) !== null && readNumber(idle) !== null && readNumber(deep) < readNumber(idle)) $('deep-ms').setCustomValidity(L().deepInvalid);
+        for (const field of numericFields) {
+            const input = $(field.id), hint = $(field.id + '-help');
+            hint.textContent = !supported(field) ? L().unsupportedTiming : input.validationMessage || rangeText(field);
+            hint.classList.toggle('error', supported(field) && !input.validity.valid);
+        }
+        for (const input of [$('instructions'), ...[...modelInputs.values()].map(f => f.description)]) input.setCustomValidity(input.value.length > input.maxLength ? L().lengthInvalid : '');
+        for (const input of $('fields').querySelectorAll('input,textarea,select')) input.setAttribute('aria-invalid', String(!input.validity.valid));
+        updateProfile();
     }
-    $('fallback').value = selected;
-    $('fallback').setCustomValidity(selected && !modelInputs.get(selected)?.enabled.checked ? t.invalid : '');
-  }
-  function populate(data) {
-    const s = data.settings;
-    locale = s.locale === 'en' ? 'en' : 'zh';
-    $('locale').value = locale;
-    $('enabled').checked = s.enabled; $('style-main').checked = s.styleUseMain; $('style-auto').checked = !s.styleUseMain;
-    $('confidence').value = s.confidenceThreshold; $('timeout').value = s.timeoutMs; $('instructions').value = s.instructions;
-    $('models').replaceChildren(); modelInputs.clear();
-    data.models.forEach((model, index) => {
-      const row = node('div'); row.className = 'model-row';
-      const modelCell = node('div'); modelCell.className = 'model-identity';
-      const controls = node('div'); controls.className = 'model-controls';
-      const enabled = node('input'); enabled.type = 'checkbox'; enabled.id = 'model-enabled-' + index;
-      enabled.checked = s.models?.[model.id]?.enabled ?? model.enabled;
-      const checkLabel = node('label'); checkLabel.className = 'check'; checkLabel.htmlFor = enabled.id;
-      const allowText = node('span', L().allow); checkLabel.append(enabled, allowText);
-      const name = node('div'); name.className = 'model-name'; name.append(node('span', model.name || model.id));
-      const currentLabel = node('span', L().current); currentLabel.className = 'badge';
-      if (model.current) name.append(currentLabel);
-      modelCell.append(name, node('span', model.id)); modelCell.lastChild.className = 'model-id';
-      const description = node('textarea'); description.className = 'model-description'; description.id = 'model-description-' + index; description.maxLength = 1000; description.rows = 2;
-      description.setAttribute('aria-label', L().details + ': ' + (model.name || model.id));
-      description.value = s.models?.[model.id]?.description || model.description || '';
-      controls.append(checkLabel, description); row.append(modelCell, controls); $('models').append(row);
-      modelInputs.set(model.id, {enabled, description, allowText, currentLabel, model, row});
-      enabled.addEventListener('change', () => { fallbackOptions(); updateModelCount(); });
+    function populate(data, settings = data.settings) { modelBase = { ...settings.models }; $('enabled').checked = settings.enabled; $('style-main').checked = settings.styleUseMain; $('style-auto').checked = !settings.styleUseMain; for (const field of numericFields.filter(field => field.scope === 'routing')) $(field.id).value = (settings[field.key] ?? defaultNumber(field)) / field.scale; $('instructions').value = settings.instructions; $('models').replaceChildren(); modelInputs.clear(); data.models.forEach((model, index) => { const row = node('div'); row.className = 'model-row'; const identity = node('div'); identity.className = 'model-identity'; const label = node('label'); label.className = 'check'; const enabled = node('input'); enabled.type = 'checkbox'; enabled.id = 'model-enabled-' + index; enabled.checked = settings.models?.[model.id]?.enabled ?? model.enabled; label.htmlFor = enabled.id; const title = node('span'); const name = node('span', model.name || model.id); name.className = 'model-name'; title.append(name); const id = node('span', model.id); id.className = 'model-id'; title.append(id); const badge = node('span'); badge.className = 'badge'; if (model.current)
+        title.append(badge); label.append(enabled, title); identity.append(label); const controls = node('div'); controls.className = 'model-controls'; const description = node('textarea'); description.id = 'model-description-' + index; description.maxLength = 1000; description.rows = 2; description.value = settings.models?.[model.id]?.description ?? model.description ?? ''; const descriptionLabel = node('label'); descriptionLabel.htmlFor = description.id; controls.append(descriptionLabel, description); row.append(identity, controls); $('models').append(row); modelInputs.set(model.id, { model, enabled, description, descriptionLabel, badge, generated: !Object.hasOwn(settings.models || {}, model.id) ? description.value : null }); }); $('models-empty').hidden = data.models.length !== 0; fallbackOptions(settings.fallbackModel || ''); const supervision = settings.supervision || {}; $('supervision-enabled').checked = !!supervision.enabled; $('monitor-main').checked = supervision.monitorMain !== false; $('monitor-children').checked = supervision.monitorChildren !== false; $('allow-takeover').checked = !!supervision.allowMainTakeover; $('correction-thinking').value = supervision.correctionThinking || 'high'; for (const field of supervisionFields) $(field.id).value = (supervision[field.key] ?? defaultNumber(field)) / field.scale; profileEdited = false; correctionOptions(supervision.correctionModel || ''); validate(); }
+    function applyChrome() { numericChrome(); const t = L(); document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN'; document.title = t.title; document.querySelectorAll('[data-i18n]').forEach(el => { if (typeof t[el.dataset.i18n] === 'string') el.textContent = t[el.dataset.i18n]; }); $('lang-en').setAttribute('aria-pressed', String(locale === 'en')); $('lang-zh').setAttribute('aria-pressed', String(locale === 'zh')); $('models').setAttribute('aria-label', t.models); $('log-region').setAttribute('aria-label', t.auditLabel); $('task-region').setAttribute('aria-label', t.taskHistory); $('models-empty').textContent = t.emptyModels; $('current-line').textContent = t.parent + ': ' + (snapshot?.currentModel || t.none); $('service').textContent = snapshot ? (snapshot.keyAvailable ? t.keyReady : t.keyMissing) : t.serviceUnknown; for (const f of modelInputs.values()) {
+        f.enabled.setAttribute('aria-label', t.allow + ': ' + f.model.id);
+        f.descriptionLabel.textContent = t.description;
+        f.description.placeholder = t.descriptionPlaceholder;
+        f.badge.textContent = t.current;
+    } filterSelect.rebuild(() => { const filter = $('filter').value; $('filter').replaceChildren(new Option(t.all, 'all')); for (const outcome of ['selected', 'fallback', 'explicit', 'blocked', 'skipped', 'error'])
+        $('filter').append(new Option(t.states[outcome], outcome)); $('filter').value = filter || 'all'; }); if (snapshot) {
+        fallbackOptions();
+        validate();
+    } status(statusKey, statusError); renderLogs(); renderSupervision(); if (detailLog)
+        renderDetail(detailLog); update(); }
+    function phaseName(value) { return L().phases?.[value] || text(value); }
+    function renderSupervision() {
+        const zh = locale === 'zh';
+        const view = snapshot?.supervision || { tasks: [], events: [], coverage: [] };
+        const tasks = Array.isArray(view.tasks) ? view.tasks : [];
+        const events = Array.isArray(view.events) ? view.events : [];
+        const reasons = {
+            waiting_for_supervisor: ["Waiting for supervisor", "等待主管"],
+            tool_stall: ["Tool duration threshold exceeded", "工具超过观察阈值"],
+            no_progress: ["No new reliable progress", "暂无可靠新进展"],
+            progress_unknown: ["Progress unknown", "进展不可观测"],
+            repeated_tool_failure: ["Repeated tool failure", "同工具连续失败"],
+            review_backoff: ["Review backoff or unchanged evidence", "复查退避或缺少新证据"],
+            observation_grace: ["Observation grace after resuming", "恢复观察宽限"],
+            observation_gap: ["Observation gap; allowing time to collect fresh evidence", "观察曾中断，等待新证据"],
+            queued: ["Queued", "排队中"],
+            paused: ["Paused", "已暂停"],
+            timing_only: ["Timing-only evidence; destructive actions prohibited", "仅时间证据，禁止破坏性动作"],
+            soft_budget: ["Expected time budget exceeded; reminder only", "超过预计时间预算，仅提醒"],
+            facts_changed: ["Facts changed during review", "复查期间事实变化"],
+            feedback_waiting_for_user: ["Waiting for user input", "等待用户输入"],
+            feedback_waiting_for_supervisor: ["Waiting for a supervisor decision", "等待主管决策"],
+            feedback_waiting_for_children: ["Waiting for child tasks", "等待子任务"],
+            feedback_queued: ["Queued", "排队中"],
+            feedback_paused: ["Paused", "已暂停"],
+            feedback_missing_updates: ["No recent execution detail", "缺少近期执行详情"],
+            feedback_failed: ["Process failure observed", "已观测到进程失败"],
+            feedback_tool_active: ["Tool executing", "工具执行中"],
+            feedback_thinking: ["Thinking", "思考中"],
+            task_deadline: ["Automatic intervention limit reached; observation continues", "自动干预时限已到，继续观察"],
+
+            supervision_disabled: ['Supervision is off; the task was not stopped.', '监督已关闭，任务未被停止。'],
+            user_disabled: ['Supervision paused for this session.', '本会话监督已暂停。'],
+            supervision_enabled: ['Supervision enabled.', '监督已开启。'],
+            user_stop: ['Task cancelled by the user. No automatic revival.', '用户已取消任务，不会自动恢复。'],
+            check_cap: ['Check limit reached; task execution is unchanged.', '检查次数已达上限，任务执行不受影响。'],
+            correction_delivered: ['Correction sent; awaiting evidence of its effect.', '纠正消息已发送，等待后续结果验证。'],
+            uncertain_intent: ['Previous intervention outcome is unknown; retry blocked.', '此前干预结果未知，已阻止重复执行。'],
+            action_failed: ['Intervention failed or its result is unknown.', '干预失败或结果尚未确认。'],
+            completed: ['Task completed.', '任务已完成。'],
+            idle_timeout: ['No recent activity; awaiting a second check.', '暂未收到活动，等待复查。'],
+            deep_thinking_idle: ['Extended thinking silence; awaiting a second check.', '深度思考静默超时，等待复查。'],
+            suspect_recheck: ['Checking the suspected stall again.', '正在复查疑似停滞。'],
+            activity_cleared_suspect: ['Activity resumed.', '已恢复活动。'],
+            waiting_for_user: ['Waiting for user input.', '等待用户输入。'],
+            waiting_for_children: ['Waiting for child tasks.', '等待子任务。'],
+            tool_active: ['A tool is still running.', '工具仍在执行。'],
+            decision_timeout: ['The supervision decision timed out.', '监督决策超时。'],
+            judge_failed: ['The supervision service request failed.', '监督服务请求失败。'],
+        };
+        const reason = code => reasons[code]?.[zh ? 1 : 0] || code || '—';
+        const target = value => ({ main: zh ? '主会话' : 'Main session', child: zh ? '子代理' : 'Child task' })[value] || value;
+        const kind = value => ({ observation: zh ? '状态记录' : 'Observation', decision: zh ? '判断' : 'Decision', action: zh ? '干预' : 'Intervention', result: zh ? '结果' : 'Result', error: zh ? '异常' : 'Error' })[value] || value;
+        const disabled = code => ['supervision_disabled', 'user_disabled'].includes(code);
+        $('coverage-boundaries').replaceChildren(...L().coverageItems.map(item => node('li', item)));
+        $('coverage-list').replaceChildren();
+        const gaps = Array.isArray(view.coverage) ? view.coverage : [];
+        for (const item of gaps.length ? gaps : [zh ? '暂无已报告的运行时覆盖问题。' : 'No runtime coverage issues reported.']) $('coverage-list').append(node('li', item));
+        $('task-rows').replaceChildren();
+        for (const task of tasks) {
+            const row = node('tr'), updated = new Date(task.lastActivityAt);
+            const state = disabled(task.lastReason) ? (zh ? '监督已暂停' : 'Supervision paused') : phaseName(task.phase);
+            const counts = zh ? `检查 ${task.checks} · 恢复 ${task.recoveries} · 接管 ${task.takeovers} · 干预 ${task.interventions}` : `Checks ${task.checks} · Recoveries ${task.recoveries} · Takeovers ${task.takeovers} · Interventions ${task.interventions}`;
+            for (const value of [Number.isNaN(updated.getTime()) ? '—' : updated.toLocaleString(zh ? 'zh-CN' : 'en'), target(task.target), state, reason(task.lastReason), counts]) row.append(node('td', value));
+            const facts = [];
+            if (task.lastFeedbackKey) facts.push(L().lastFeedback + ': ' + reason('feedback_' + task.lastFeedbackKey.split(':')[0]));
+            if (task.budgetPaused) facts.push(L().pausedBudget);
+            if (typeof task.pausedMs === 'number') facts.push(L().pausedTime + ': ' + task.pausedMs / 1000 + ' ' + L().seconds);
+            if (task.softBudgetNotified) facts.push(L().softNotified);
+            if (task.deadlineNotified) facts.push(L().deadlineNotified);
+            if (task.progressKnown === false) facts.push(L().unknownProgress);
+            if (typeof task.consecutiveFailures === 'number') facts.push(L().failures + ': ' + task.consecutiveFailures + (task.failureTool ? ' · ' + task.failureTool : ''));
+            const factCell = node('td'); for (const fact of facts) factCell.append(node('p', fact));
+            if (!facts.length) factCell.textContent = '—'; row.append(factCell);
+            row.title = task.id; $('task-rows').append(row);
+        }
+        $('task-table').hidden = !tasks.length; $('supervision-empty').hidden = !!tasks.length;
+        $('supervision-empty').textContent = snapshot ? L().supervisionEmpty : L().supervisionUnknown;
+        $('event-timeline').replaceChildren();
+        if (!events.length) $('event-timeline').append(node('p', L().eventEmpty));
+        for (const event of events) {
+            const article = node('article'), when = new Date(event.at);
+            article.append(node('p', (Number.isNaN(when.getTime()) ? '—' : when.toLocaleString(zh ? 'zh-CN' : 'en')) + ' · ' + target(event.target) + ' · ' + kind(disabled(event.reasonCode) ? 'observation' : event.kind)));
+            article.append(node('p', reason(event.reasonCode)));
+            const detail = node('div'); detail.className = 'event-evidence';
+            detail.append(node('p', event.taskId), node('p', event.reasonCode + ' · ' + (event.message || '')));
+            if (event.evidence?.length) detail.append(node('p', event.evidence.join('\n')));
+            article.append(detail); $('event-timeline').append(article);
+        }
+    }
+    function dateText(log) { const date = new Date(log.at); return Number.isNaN(date.getTime()) ? text(log.at) : date.toLocaleString(locale === 'en' ? 'en' : 'zh-CN'); }
+    function reportText(log) { return log.actualModel ? text(log.actualModel) + (log.actualThinking ? ' · ' + text(log.actualThinking) : '') : L().unreported; }
+    function renderLogs() { const logs = snapshot?.logs || []; const filtered = logs.filter(log => $('filter').value === 'all' || log.outcome === $('filter').value); detailLog = filtered.find(log => log.id === detailLog?.id) || null;
+        $('log-detail').replaceChildren(); $('detail-empty').hidden = !!detailLog;
+        if (detailLog) renderDetail(detailLog);
+        $('log-rows').replaceChildren(); for (const log of filtered) {
+        const row = node('tr');
+        for (const value of [dateText(log), log.agent || '—', log.requestedModel || '—', reportText(log), stateName(log.outcome)])
+            row.append(node('td', value));
+        const detail = node('td');
+        detail.append(node('p', log.reason));
+        const button = node('button', L().inspect);
+        button.type = 'button';
+        button.setAttribute('aria-pressed', String(detailLog?.id === log.id));
+        button.addEventListener('click', () => {
+            detailLog = log; renderDetail(log); $('detail-empty').hidden = true;
+            $('log-detail').closest('.route-detail').scrollTop = 0;
+            for (const entry of $('log-rows').children) {
+                const selected = entry === row; entry.classList.toggle('selected', selected);
+                entry.querySelector('button').setAttribute('aria-pressed', String(selected));
+            }
+            if (matchMedia('(max-width:800px)').matches) $('log-title').scrollIntoView({ block: 'start' });
+        });
+        row.classList.toggle('selected', detailLog?.id === log.id);
+        detail.append(button);
+        row.append(detail);
+        $('log-rows').append(row);
+    } $('logs-table').hidden = !filtered.length; $('empty').hidden = !!filtered.length; $('empty').textContent = !snapshot ? L().logsUnknown : logs.length ? L().emptyFiltered : L().empty; $('log-count').textContent = String(logs.length); }
+    function renderDetail(log) { const t = L(), entries = [[t.recordId, log.id], [t.time, dateText(log)], [t.agent, log.agent], [t.choice, log.requestedModel], [t.reported, reportText(log)], [t.outcome, stateName(log.outcome)], [t.execution, log.executionState ? stateName(log.executionState) : t.unreported], [t.actualStatus, log.actualStatus], [t.reason, log.reason], [t.score, log.confidence], [t.session, log.sessionId], [t.run, log.runId], [t.async, log.asyncId]]; if (log.audit)
+        entries.push([t.reasonCode, log.audit.reasonCode], [t.duration, log.audit.durationMs], [t.fallbackSource, t.sources[log.audit.fallbackSource] || log.audit.fallbackSource], [t.stageCandidates, log.audit.candidateIds.join('\n')]); if (log.note)
+        entries.push([t.note, log.note]); $('log-detail').replaceChildren(); for (const [label, value] of entries) {
+        $('log-detail').append(node('dt', label), node('dd', value ?? t.unreported));
+    } }
+    async function request(method = 'GET', body) { const headers = { Authorization: 'Bearer ' + token }; if (body !== undefined) {
+        headers['Content-Type'] = 'application/json';
+        headers['If-Match'] = etag;
+    } let response; try {
+        response = await fetch('/settings', { method, headers, cache: 'no-store', signal: AbortSignal.timeout(12000), body: body === undefined ? undefined : JSON.stringify(body) });
+    }
+    catch {
+        throw Object.assign(new Error(), { key: 'connect' });
+    } if (!response.ok)
+        throw Object.assign(new Error(), { key: response.status === 409 ? 'conflict' : [401, 403].includes(response.status) ? 'expired' : 'request', status: response.status }); let data; try {
+        data = await response.json();
+    }
+    catch {
+        throw Object.assign(new Error(), { key: 'incomplete' });
+    } const version = response.headers.get('ETag'); if (!data?.settings || !Array.isArray(data.models) || !Array.isArray(data.logs) || !version)
+        throw Object.assign(new Error(), { key: 'incomplete' }); return { data, version }; }
+    async function load(logsOnly = false) { if (busy || !token)
+        return; lock(true); status(logsOnly ? 'refreshing' : 'reading'); try {
+        const { data, version } = await request();
+        if (logsOnly && snapshot) {
+            snapshot.logs = data.logs;
+            snapshot.supervision = data.supervision;
+            renderSupervision();
+            snapshot.keyAvailable = data.keyAvailable;
+            renderLogs();
+            $('service').textContent = L()[data.keyAvailable ? 'keyReady' : 'keyMissing'];
+            status(conflicted ? 'conflict' : 'logsRefreshed', conflicted);
+        }
+        else {
+            snapshot = data;
+            etag = version;
+            locale = data.settings.locale === 'zh' ? 'zh' : 'en';
+            conflicted = false;
+            populate(data);
+            baseline = fingerprint();
+            status(data.settingsError ? 'fileError' : 'loaded', !!data.settingsError);
+            applyChrome();
+        }
+    }
+    catch (error) {
+        status(error.key || 'request', true);
+    }
+    finally {
+        lock(false);
+        update();
+    } }
+    function queueSave() { if (!snapshot || snapshot.settingsError || conflicted || !etag)
+        return; clearTimeout(saveTimer); const generation = ++saveGeneration; saveTimer = setTimeout(() => { if (generation === saveGeneration)
+        persist(); }, 400); }
+    async function persist() { if (busy) {
+        saveQueued = dirty();
+        return;
+    } if (!snapshot || snapshot.settingsError || conflicted || !etag || !dirty())
+        return; validate(); if (!$('settings-form').checkValidity()) {
+        status('invalid', true);
+        const invalid = $('settings-form').querySelector('input:invalid,select:invalid,textarea:invalid');
+        const panel = invalid?.closest('[data-panel]');
+        if (panel) switchView(panel.dataset.panel);
+        invalid?.setAttribute('aria-invalid', 'true');
+        update();
+        return;
+    } const body = payload(), sent = fingerprint(); savingDraft = true; lock(true); try {
+        const { data, version } = await request('PUT', body);
+        const edited = fingerprint() !== sent;
+        snapshot = data;
+        etag = version;
+        locale = data.settings.locale === 'zh' ? 'zh' : 'en';
+        if (!edited) {
+            const typing = document.activeElement?.closest?.('#models, #advanced, #supervision-advanced');
+            if (!typing) populate(data);
+            baseline = typing ? sent : fingerprint();
+        }
+        else
+            saveQueued = true;
+        if (data.settingsError)
+            status('fileError', true);
+        else if (!edited) {
+            status('saved');
+            showSaved();
+        }
+        applyChrome();
+    }
+    catch (error) {
+        if (error.status === 409)
+            conflicted = true;
+        status(error.key || 'request', true);
+    }
+    finally {
+        savingDraft = false;
+        lock(false);
+        update();
+        if (saveQueued) {
+            saveQueued = false;
+            queueSave();
+        }
+    } }
+    function switchView(view) {
+        for (const select of [fallbackSelect, filterSelect, modelSelect, thinkingSelect]) select.close();
+        document.querySelectorAll('[data-panel]').forEach(panel => { panel.hidden = panel.dataset.panel !== view; });
+        document.querySelectorAll('[data-view]').forEach(button => {
+            if (button.dataset.view === view) button.setAttribute('aria-current', 'page');
+            else button.removeAttribute('aria-current');
+        });
+    }
+    document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => { switchView(button.dataset.view); window.scrollTo({ top: 0, behavior: 'instant' }); }));
+    function confirm(kind, action) { fallbackSelect.close(); filterSelect.close(); modelSelect.close(); thinkingSelect.close(); confirmAction = action; $('confirm-title').textContent = L()[kind + 'Title']; $('confirm-copy').textContent = L()[kind + 'Copy']; $('confirm-dialog').showModal(); }
+    $('settings-form').addEventListener('input', event => { if (supervisionFields.some(field => field.id === event.target.id)) profileEdited = true; validate(); update(); queueSave(); });
+    $('settings-form').addEventListener('change', event => {
+        if (event.target.name === 'timing-profile') { const preset = timingPresets[event.target.value]; profileEdited = !preset; if (preset) for (const field of supervisionFields) if (supported(field) && Object.hasOwn(preset, field.key)) $(field.id).value = preset[field.key] / field.scale; }
+        validate(); update(); queueSave();
     });
-    updateModelCount();
-    $('models-empty').hidden = data.models.length !== 0;
-    $('models-empty').textContent = L().emptyModels;
-    fallbackOptions(s.fallbackModel || '');
-  }
-  function updateModelCount() {
-    $('enabled-count').textContent = L().enabledCount([...modelInputs.values()].filter(fields => fields.enabled.checked).length);
-  }
-  function payload() {
-    const models = {...snapshot.settings.models};
-    for (const [id, fields] of modelInputs) Object.defineProperty(models, id, {value:{enabled:fields.enabled.checked,description:fields.description.value},enumerable:true,configurable:true,writable:true});
-    return {...snapshot.settings, enabled:$('enabled').checked, fallbackModel:$('fallback').value, styleUseMain:$('style-main').checked, confidenceThreshold:Number($('confidence').value), timeoutMs:Number($('timeout').value), locale:$('locale').value === 'en' ? 'en' : 'zh', instructions:$('instructions').value, models};
-  }
-  function renderLogs(logs) {
-    const t = L();
-    $('empty').hidden = logs.length > 0; $('empty').textContent = t.empty; $('logs-table').hidden = !logs.length;
-    $('log-count').textContent = logs.length;
-    for (const log of logs) {
-      let row = logRows.get(log.id);
-      if (!row) {
-        const tr = node('tr'), cells = Array.from({length:6}, () => node('td'));
-        tr.append(...cells); $('log-rows').append(tr); row = {cells}; logRows.set(log.id, row);
-      }
-      const date = new Date(log.at);
-      const report = log.actualModel ? text(log.actualModel) + (log.actualThinking ? ' · ' + text(log.actualThinking) : '') : t.unreported;
-      const values = [Number.isNaN(date.getTime()) ? text(log.at) : date.toLocaleString(locale === 'en' ? 'en' : 'zh-CN'), log.agent || '—', log.requestedModel || '—', report, (t.outcomes[log.outcome] || text(log.outcome)) + (log.actualStatus ? ' / ' + text(log.actualStatus) : ''), text(log.reason) + (Number.isFinite(log.confidence) ? ' · ' + t.score + ' ' + log.confidence : '')];
-      row.cells.forEach((cell, index) => { cell.textContent = text(values[index]); });
+    $('settings-form').addEventListener('submit', event => event.preventDefault());
+    function switchLocale(nextLocale) { if (busy || locale === nextLocale) return; locale = nextLocale; for (const [id, f] of modelInputs) {
+        if (f.generated !== null && f.description.value === f.generated) {
+            const translated = snapshot.defaultModels?.[locale]?.find(model => model.id === id)?.description;
+            if (translated !== undefined) {
+                f.description.value = translated;
+                f.generated = translated;
+            }
+        }
+    } applyChrome(); queueSave(); }
+    $('lang-en').addEventListener('click', () => switchLocale('en'));
+    $('lang-zh').addEventListener('click', () => switchLocale('zh'));
+    $('reload').addEventListener('click', () => { if (dirty())
+        confirm('reload', () => load());
+    else
+        load(); });
+    $('refresh').addEventListener('click', () => load(true));
+    $('reset').addEventListener('click', () => confirm('reset', () => { if (busy || !snapshot?.defaults || !snapshot.defaultModels)
+        return; const defaults = { ...snapshot.defaults, locale }; populate({ ...snapshot, models: snapshot.defaultModels[locale] }, defaults); status('restored'); applyChrome(); queueSave(); }));
+    $('cancel-confirm').addEventListener('click', () => $('confirm-dialog').close());
+    $('accept-confirm').addEventListener('click', () => { const action = confirmAction; $('confirm-dialog').close(); action?.(); });
+    $('confirm-dialog').addEventListener('close', () => { confirmAction = null; });
+        $('filter').addEventListener('change', renderLogs);
+    try {
+        $('retry').addEventListener('click', () => load());
+        applyChrome();
+        if (token)
+            load();
+        else {
+            status('auth', true);
+            update();
+        }
+    } catch {
+        status('boot', true);
+        lock(false);
     }
-  }
-  async function persist() {
-    if (!snapshot || snapshot.settingsError || busy || !etag || !$('settings-form').checkValidity()) return;
-    const body = payload();
-    lock(true); status(L().syncing);
-    try {
-      const {data, version} = await request('/settings', 'PUT', body, etag);
-      snapshot = data; etag = version; locale = data.settings.locale === 'en' ? 'en' : 'zh';
-      applyChrome();
-      status(data.settingsError ? L().fileError : L().synced, !!data.settingsError);
-    } catch (error) {
-      if (error.status === 409) {
-        try {
-          const latest = await request('/settings');
-          snapshot = latest.data; etag = latest.version; locale = snapshot.settings.locale === 'en' ? 'en' : 'zh';
-          populate(snapshot); applyChrome(); status(L().conflict, true);
-        } catch (reload) { status(reload.message, true); }
-      } else status(error.message, true);
-    } finally { lock(false); }
-  }
-  function scheduleSave(delay) {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => { persist(); }, delay);
-  }
-  async function refresh() {
-    if (busy || !token) return;
-    lock(true); status(L().reading);
-    try {
-      const {data, version} = await request('/settings'); snapshot = data; etag = version;
-      populate(data); applyChrome();
-      logRows.clear(); $('log-rows').replaceChildren(); renderLogs(data.logs);
-      status(data.settingsError ? L().fileError : L().synced, !!data.settingsError);
-    } catch (error) { status(error.message, true); }
-    finally { lock(false); }
-  }
-  $('settings-form').addEventListener('input', event => {
-    if (event.target.closest('textarea') || event.target.type === 'number') scheduleSave(400);
-    else scheduleSave(0);
-  });
-  $('fallback').addEventListener('change', () => fallbackOptions());
-  $('locale').addEventListener('change', () => { locale = $('locale').value === 'en' ? 'en' : 'zh'; applyChrome(); scheduleSave(0); });
-  $('settings-form').addEventListener('submit', event => event.preventDefault());
-  $('refresh').addEventListener('click', refresh);
-  if (!token) { status(L().auth, true); lock(false); } else refresh();
 })();
-</script>
-</body>
-</html>
+</script></body></html>
