@@ -2,7 +2,7 @@
 
 [English](README.md) · 中文
 
-https://github.com/user-attachments/assets/79c12953-09ec-406e-9b0e-9ed3c8505737
+https://github.com/user-attachments/assets/5866076c-b518-460c-872f-2bbc78fb098f
 
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
