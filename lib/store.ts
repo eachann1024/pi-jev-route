@@ -1,12 +1,15 @@
 import { chmodSync, lstatSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { DEFAULT_SUPERVISION, parseSupervisionSettings } from './supervision-policy.ts';
+import type { SupervisionAction, SupervisionEvent, SupervisionSettings, SupervisionTask } from './supervision-types.ts';
 
 export type Settings = {
   enabled: boolean; fallbackModel: string; styleUseMain: boolean; confidenceThreshold: number;
   timeoutMs: number; locale: 'zh' | 'en'; instructions: string; models: Record<string, { enabled: boolean; description: string }>;
+  supervision: SupervisionSettings;
 };
-export const DEFAULTS: Settings = { enabled: true, fallbackModel: '', styleUseMain: true, confidenceThreshold: .55, timeoutMs: 5000, locale: 'en', instructions: '', models: {} };
+export const DEFAULTS: Settings = { enabled: true, fallbackModel: '', styleUseMain: true, confidenceThreshold: .55, timeoutMs: 5000, locale: 'en', instructions: '', models: {}, supervision: DEFAULT_SUPERVISION };
 export type RouteLog = {
   id: string; at: string | number; sessionId: string; toolCallId: string; agent: string; taskHash: string;
   outcome: 'selected' | 'fallback' | 'explicit' | 'blocked' | 'skipped' | 'error'; requestedModel: string;
@@ -35,7 +38,8 @@ function range(value: unknown, min: number, max: number): asserts value is numbe
 export function parseSettings(value: unknown): Settings {
   const input = object(value);
   keys(input, Object.keys(DEFAULTS));
-  const result = { ...DEFAULTS, ...input, models: {} } as Settings;
+  const { supervision: rawSupervision, ...routing } = input;
+  const result = { ...DEFAULTS, ...routing, models: {}, supervision: parseSupervisionSettings(rawSupervision ?? {}) } as Settings;
   for (const key of ['enabled', 'styleUseMain'] as const) if (typeof result[key] !== 'boolean') throw new TypeError('开关必须是布尔值');
   if (result.locale !== 'zh' && result.locale !== 'en') throw new TypeError('语言必须是 zh 或 en');
   id(result.fallbackModel, true);
@@ -54,6 +58,116 @@ export function parseSettings(value: unknown): Settings {
     result.models[key] = { enabled: model.enabled, description: model.description };
   }
   return result;
+}
+const TASK_LIMIT = 50, EVENT_LIMIT = 200, GOAL_LIMIT = 240, MESSAGE_LIMIT = 500, EVIDENCE_LIMIT = 12, EVIDENCE_ITEM_LIMIT = 160;
+const phases = ['running', 'suspect', 'waiting', 'correcting', 'recovering', 'completed', 'stopped', 'blocked'];
+const actions = ['continue', 'wait', 'correct', 'recover', 'takeover', 'stop', 'insufficient'];
+const eventKinds = ['observation', 'decision', 'action', 'result', 'error'];
+function boundedText(value: unknown, max: number, label: string): string {
+  string(value, max);
+  const text = (value as string).replace(/[\u0000-\u001f]/g, ' ');
+  if (!text) throw new TypeError(label);
+  return text.slice(0, max);
+}
+function count(value: unknown, max: number, label: string): asserts value is number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > max) throw new TypeError(label);
+}
+function optionalId(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  return boundedText(value, 256, '标识无效');
+}
+function redactEvidence(value: unknown): string[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length > EVIDENCE_LIMIT) throw new TypeError('证据数量无效');
+  return value.map(item => boundedText(item, EVIDENCE_ITEM_LIMIT, '证据无效').replace(/(?:sk-|key-|secret)[A-Za-z0-9_\-]{8,}/gi, '[redacted]'));
+}
+function validateTask(value: SupervisionTask): SupervisionTask {
+  const row = object(value);
+  keys(row, ['id', 'sessionId', 'target', 'runId', 'goal', 'phase', 'startedAt', 'lastActivityAt', 'lastProgressAt', 'lastReviewAt', 'lastReviewedVersion', 'lastReviewedToolCount', 'suspectAt', 'recoveries', 'takeovers', 'interventions', 'checks', 'revision', 'pendingAction', 'pendingIntent', 'rootGoal', 'proofRunId', 'userStopped', 'autoInterventionBlocked', 'chainId', 'lastReason', 'pausedMs', 'budgetPaused', 'lastObservedAt', 'observationGraceUntil', 'lastFeedbackAt', 'lastFeedbackKey', 'softBudgetNotified', 'deadlineNotified', 'lastToolStallKey', 'progressKnown', 'consecutiveFailures', 'failureTool', 'progressDigests', 'suspectReason', 'lastTimingReviewKey', 'terminalObservedAt']);
+  if (row.target !== 'main' && row.target !== 'child') throw new TypeError('监督目标无效');
+  if (!phases.includes(String(row.phase))) throw new TypeError('任务阶段无效');
+  const task: SupervisionTask = {
+    id: boundedText(row.id, 256, '任务标识无效'),
+    sessionId: boundedText(row.sessionId, 256, '会话标识无效'),
+    target: row.target,
+    goal: boundedText(row.goal, GOAL_LIMIT, '任务目标无效'),
+    phase: row.phase as SupervisionTask['phase'],
+    startedAt: 0, lastActivityAt: 0, lastProgressAt: 0, lastReviewAt: 0,
+    lastReviewedVersion: 0, lastReviewedToolCount: 0, recoveries: 0, takeovers: 0, interventions: 0, checks: 0, revision: 0,
+  };
+  for (const key of ['startedAt', 'lastActivityAt', 'lastProgressAt', 'lastReviewAt'] as const) {
+    count(row[key], Number.MAX_SAFE_INTEGER, '任务时间无效');
+    task[key] = row[key];
+  }
+  for (const key of ['lastReviewedVersion', 'lastReviewedToolCount', 'recoveries', 'takeovers', 'interventions', 'checks', 'revision'] as const) {
+    count(row[key], 1_000_000, '任务计数无效');
+    task[key] = row[key];
+  }
+  const runId = optionalId(row.runId);
+  if (runId !== undefined) task.runId = runId;
+  if (row.suspectAt !== undefined) { count(row.suspectAt, Number.MAX_SAFE_INTEGER, '可疑时间无效'); task.suspectAt = row.suspectAt; }
+  if (row.pendingAction !== undefined) {
+    if (!actions.includes(String(row.pendingAction))) throw new TypeError('待执行动作无效');
+    task.pendingAction = row.pendingAction as SupervisionTask['pendingAction'];
+  }
+  if (row.pendingIntent !== undefined) {
+    const intent = object(row.pendingIntent);
+    keys(intent, ['action', 'reasonCode', 'generation', 'at']);
+    if (!actions.includes(String(intent.action))) throw new TypeError('待执行意图无效');
+    count(intent.generation, 1_000_000, '意图代际无效');
+    count(intent.at, Number.MAX_SAFE_INTEGER, '意图时间无效');
+    task.pendingIntent = { action: intent.action as SupervisionAction, reasonCode: boundedText(intent.reasonCode, 64, '原因码无效'), generation: intent.generation, at: intent.at };
+  }
+  if (row.rootGoal !== undefined) task.rootGoal = boundedText(row.rootGoal, GOAL_LIMIT, '任务目标无效');
+  if (row.proofRunId !== undefined) task.proofRunId = optionalId(row.proofRunId) ?? (() => { throw new TypeError('证明运行无效'); })();
+  if (row.userStopped !== undefined) { if (typeof row.userStopped !== 'boolean') throw new TypeError('用户停止标记无效'); task.userStopped = row.userStopped; }
+  if (row.autoInterventionBlocked !== undefined) { if (typeof row.autoInterventionBlocked !== 'boolean') throw new TypeError('自动干预标记无效'); task.autoInterventionBlocked = row.autoInterventionBlocked; }
+  if (row.chainId !== undefined) task.chainId = optionalId(row.chainId) ?? (() => { throw new TypeError('任务链标识无效'); })();
+  if (row.lastReason !== undefined) task.lastReason = boundedText(row.lastReason, 64, '原因码无效');
+  for (const key of ['pausedMs', 'lastObservedAt', 'observationGraceUntil', 'lastFeedbackAt', 'consecutiveFailures', 'terminalObservedAt'] as const) if (row[key] !== undefined) {
+    count(row[key], Number.MAX_SAFE_INTEGER, '监督时间或计数无效'); task[key] = row[key];
+  }
+  for (const key of ['budgetPaused', 'softBudgetNotified', 'deadlineNotified', 'progressKnown'] as const) if (row[key] !== undefined) {
+    if (typeof row[key] !== 'boolean') throw new TypeError('监督标记无效'); task[key] = row[key];
+  }
+  for (const key of ['lastFeedbackKey', 'lastToolStallKey', 'failureTool', 'suspectReason', 'lastTimingReviewKey'] as const) if (row[key] !== undefined) task[key] = boundedText(row[key], 256, '监督事实无效');
+  if (row.progressDigests !== undefined) {
+    if (!Array.isArray(row.progressDigests) || row.progressDigests.length > 32 || row.progressDigests.some(value => typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value))) throw new TypeError('进展摘要无效');
+    task.progressDigests = [...row.progressDigests] as string[];
+  }
+  return task;
+}
+function validateEvent(value: SupervisionEvent): SupervisionEvent {
+  const row = object(value);
+  keys(row, ['id', 'at', 'sessionId', 'taskId', 'target', 'runId', 'kind', 'action', 'reasonCode', 'message', 'evidence', 'scores']);
+  count(row.at, Number.MAX_SAFE_INTEGER, '事件时间无效');
+  if (row.target !== 'main' && row.target !== 'child') throw new TypeError('监督目标无效');
+  if (!eventKinds.includes(String(row.kind))) throw new TypeError('事件类型无效');
+  const event: SupervisionEvent = {
+    id: boundedText(row.id, 256, '事件标识无效'),
+    at: row.at as number,
+    sessionId: boundedText(row.sessionId, 256, '会话标识无效'),
+    taskId: boundedText(row.taskId, 256, '任务标识无效'),
+    target: row.target,
+    kind: row.kind as SupervisionEvent['kind'],
+    reasonCode: boundedText(row.reasonCode, 64, '原因码无效'),
+    message: boundedText(row.message, MESSAGE_LIMIT, '事件说明无效'),
+  };
+  const runId = optionalId(row.runId);
+  if (runId !== undefined) event.runId = runId;
+  if (row.action !== undefined) {
+    if (!actions.includes(String(row.action))) throw new TypeError('事件动作无效');
+    event.action = row.action as SupervisionEvent['action'];
+  }
+  const evidence = redactEvidence(row.evidence);
+  if (evidence) event.evidence = evidence;
+  if (row.scores !== undefined) {
+    const scores = object(row.scores);
+    keys(scores, ['alignment', 'progress', 'constraints']);
+    for (const key of ['alignment', 'progress', 'constraints'] as const) range(scores[key], 0, 1);
+    event.scores = { alignment: scores.alignment as number, progress: scores.progress as number, constraints: scores.constraints as number };
+  }
+  return event;
 }
 function validateLog(value: RouteLog): RouteLog {
   const row = object(value);
@@ -98,7 +212,8 @@ export function openStore(path: string) {
   try {
     chmodSync(path, 0o600);
     db.exec('PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;');
-    db.exec('CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS logs (id TEXT PRIMARY KEY, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS plugin_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);');
+    db.exec('CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS logs (id TEXT PRIMARY KEY, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS plugin_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS supervision_tasks (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS supervision_events (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, task_id TEXT NOT NULL, at INTEGER NOT NULL, json TEXT NOT NULL);');
+    db.exec('CREATE INDEX IF NOT EXISTS supervision_tasks_session ON supervision_tasks(session_id); CREATE INDEX IF NOT EXISTS supervision_events_session_at ON supervision_events(session_id, at DESC);');
     const saved = db.prepare('SELECT json FROM settings WHERE id=1').get();
     if (saved) stored(saved.json as string, parseSettings);
     transaction(() => {
@@ -203,6 +318,42 @@ export function openStore(path: string) {
       range(limit, 1, 1000);
       if (!Number.isInteger(limit)) throw new TypeError('条数必须是整数');
       return db.prepare('SELECT json FROM logs ORDER BY rowid DESC LIMIT ?').all(limit).map(row => stored(row.json as string, validateLog));
+    },
+    getSupervisionTasks(sessionId: string): SupervisionTask[] {
+      string(sessionId, 256);
+      return db.prepare('SELECT json FROM supervision_tasks WHERE session_id=? ORDER BY rowid DESC')
+        .all(sessionId).map(row => stored(row.json as string, validateTask));
+    },
+    saveSupervisionTask(task: SupervisionTask) {
+      const valid = validateTask(task);
+      transaction(() => {
+        const rows = db.prepare('SELECT id,json FROM supervision_tasks WHERE session_id=? ORDER BY rowid ASC').all(valid.sessionId)
+          .map(row => ({ id: String(row.id), task: stored(row.json as string, validateTask) }));
+        const known = rows.some(row => row.id === valid.id);
+        const projected = known ? rows.length : rows.length + 1;
+        const removable = rows.filter(row => row.id !== valid.id && !row.task.pendingAction && ['completed', 'stopped', 'blocked'].includes(row.task.phase));
+        const overflow = projected - TASK_LIMIT;
+        if (overflow > removable.length) throw new Error('supervision task capacity reached');
+        for (const row of removable.slice(0, Math.max(0, overflow))) db.prepare('DELETE FROM supervision_tasks WHERE id=?').run(row.id);
+        db.prepare('INSERT INTO supervision_tasks(id,session_id,json) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET session_id=excluded.session_id, json=excluded.json').run(valid.id, valid.sessionId, JSON.stringify(valid));
+      });
+    },
+    addSupervisionEvent(event: SupervisionEvent) {
+      const valid = validateEvent(event);
+      transaction(() => {
+        db.prepare('INSERT INTO supervision_events(id,session_id,task_id,at,json) VALUES(?,?,?,?,?)').run(valid.id, valid.sessionId, valid.taskId, valid.at, JSON.stringify(valid));
+        const overflow = db.prepare('SELECT id FROM supervision_events WHERE session_id=? ORDER BY at DESC, rowid DESC LIMIT -1 OFFSET ?').all(valid.sessionId, EVENT_LIMIT);
+        for (const row of overflow) db.prepare('DELETE FROM supervision_events WHERE id=?').run(row.id);
+      });
+    },
+    getSupervisionEvents(sessionId?: string, limit = EVENT_LIMIT): SupervisionEvent[] {
+      if (sessionId !== undefined) string(sessionId, 256);
+      range(limit, 1, EVENT_LIMIT);
+      if (!Number.isInteger(limit)) throw new TypeError('条数必须是整数');
+      const rows = sessionId === undefined
+        ? db.prepare('SELECT json FROM supervision_events ORDER BY at DESC, rowid DESC LIMIT ?').all(limit)
+        : db.prepare('SELECT json FROM supervision_events WHERE session_id=? ORDER BY at DESC, rowid DESC LIMIT ?').all(sessionId, limit);
+      return rows.map(row => stored(row.json as string, validateEvent));
     },
     close() { db.close(); },
   };
