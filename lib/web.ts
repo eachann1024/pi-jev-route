@@ -10,6 +10,7 @@ export async function startWeb(
   idleMs = 300000,
   onboardingHtml?: string,
   onboardingDone?: () => void,
+  addModel?: (id: string) => { tokens: string[]; added: boolean },
 ) {
   const html = await readFile(new URL("../web/index.html", import.meta.url));
   const welcomeHtml = onboardingHtml;
@@ -41,9 +42,19 @@ export async function startWeb(
     }
     if (req.headers.authorization !== `Bearer ${token}`) { res.writeHead(403).end(); return; }
     const noteMatch = /^\/notes\/([0-9a-f-]{36})$/.exec(req.url ?? "");
-    if (req.url !== "/settings" && req.url !== "/onboarding/complete" && !noteMatch) { res.writeHead(404).end(); return; }
+    if (req.url !== "/settings" && req.url !== "/models" && req.url !== "/onboarding/complete" && !noteMatch) { res.writeHead(404).end(); return; }
     try {
-      if (req.method === "PUT" || req.method === "PATCH") {
+      if (req.method === "POST" && req.url === "/models") {
+        if (!addModel) { res.writeHead(404).end(); return; }
+        if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") { res.writeHead(415).end(); return; }
+        let size = 0; const chunks: Buffer[] = [];
+        for await (const chunk of req) { size += chunk.length; if (size > 4096) { res.writeHead(413).end(); return; } chunks.push(Buffer.from(chunk)); }
+        const value: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError();
+        const record = value as Record<string, unknown>;
+        if (Object.keys(record).length !== 1 || typeof record.id !== "string" || !/^[^\s/]+\/[^\s]+$/u.test(record.id)) throw new TypeError();
+        addModel(record.id);
+      } else if (req.method === "PUT" || req.method === "PATCH") {
         if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") { res.writeHead(415).end(); return; }
         let size = 0;
         const chunks: Buffer[] = [];

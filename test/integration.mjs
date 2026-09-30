@@ -46,6 +46,8 @@ const emit = async (type, event = {}) => { let result; for (const handler of [..
 const event = (input, id = randomUUID()) => ({ toolName: 'subagent', toolCallId: id, input });
 
 try {
+  await writeEnabled(['fixture/*']);
+  assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(model => model.id), ['fixture/low', 'fixture/main', 'fixture/other']);
   await writeEnabled(['low', 'main']);
   execFail = true;
   await emit('session_start');

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { DEFAULTS, openStore, parseSettings } from '../lib/store.ts';
 import { defaultModelDescription, LIGHT_MODEL_DESCRIPTION, STRONG_MODEL_DESCRIPTION } from '../lib/describe.ts';
-import { loadPiEnabledModels, resolveEnabledIds, resolveListedModel, splitModelRef } from '../lib/enabled.ts';
+import { addEnabledModel, catalogEntries, expandEnabledIds, loadPiEnabledModels, resolveEnabledIds, resolveListedModel, splitModelRef } from '../lib/enabled.ts';
 import { routeTask } from '../lib/router.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'pi-jev-route-test-'));
@@ -36,6 +36,16 @@ try {
   assert.deepEqual(resolveEnabledIds(['9router/low'], catalog, '9router'), ['9router/low']);
   assert.deepEqual(resolveEnabledIds(['low', 'high'], new Map(), '9router'), ['9router/low', '9router/high']);
   assert.deepEqual(resolveEnabledIds([], catalog, '9router'), []);
+  assert.deepEqual(expandEnabledIds(['9router/*', 'missing'], catalog, '9router'), ['9router/low', '9router/high', '9router/loop']);
+  assert.deepEqual(expandEnabledIds(['low:high'], catalog, '9router'), ['9router/low']);
+  assert.deepEqual(catalogEntries(catalog.values()).map(model => model.label), ['9router/high', '9router/loop', '9router/low', 'fixture/other']);
+  const scopeDir = join(dir, 'scope');
+  assert.deepEqual(addEnabledModel('fixture/other', catalog, scopeDir), { tokens: ['fixture/other'], added: true });
+  writeFileSync(join(scopeDir, 'settings.json'), JSON.stringify({ theme: 'dark', enabledModels: ['9router/*'], defaultProvider: '9router' }, null, 2));
+  assert.deepEqual(addEnabledModel('fixture/other', catalog, scopeDir), { tokens: ['9router/*', 'fixture/other'], added: true });
+  assert.equal(JSON.parse(readFileSync(join(scopeDir, 'settings.json'), 'utf8')).theme, 'dark');
+  assert.deepEqual(addEnabledModel('9router/low', catalog, scopeDir).added, false);
+  assert.throws(() => addEnabledModel('missing/model', catalog, scopeDir), TypeError);
   assert.deepEqual(loadPiEnabledModels(join(dir, 'missing-agent')), { tokens: [], defaultProvider: '' });
   const listed = ['9router/low', '9router/high', '9router/loop'];
   assert.deepEqual(splitModelRef('google/gemini-3.8-flash:low'), { token: 'google/gemini-3.8-flash', thinking: 'low' });

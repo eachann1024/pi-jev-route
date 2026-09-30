@@ -7,10 +7,9 @@ import { Text } from "@earendil-works/pi-tui";
 import { Type } from "@earendil-works/pi-ai";
 import { copy, ROUTING_PROMPT } from "./lib/copy.ts";
 import { defaultModelDescription } from "./lib/describe.ts";
-import { loadPiEnabledModels, modelId, resolveEnabledIds, resolveListedModel, splitModelRef } from "./lib/enabled.ts";
+import { addEnabledModel, catalogEntries, expandEnabledIds, loadPiEnabledModels, modelId, resolveListedModel, splitModelRef, type CatalogModel } from "./lib/enabled.ts";
 import { DEFAULTS, openStore, parseSettings, type RouteLog, type Settings } from "./lib/store.ts";
 import { routeTask, type Candidate } from "./lib/router.ts";
-
 import { registerSupervision, type SupervisionRuntime } from "./lib/supervision-runtime.ts";
 
 const COVERAGE = "自动覆盖模型发起的结构化 subagent 单任务（含 async）。workflow、/run、定时任务、其他扩展直接派发和子代理内部派发不保证覆盖；未覆盖的工具工作流会记为跳过。";
@@ -18,16 +17,21 @@ const PLUGIN = "pi-jev-route";
 type Badge = { text?: string; summary?: string };
 const clean = (value: unknown, max = 256) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "";
 
+function availableModels(ctx: ExtensionContext) {
+  return new Map(ctx.modelRegistry.getAvailable().map(model => [modelId(model), {
+    provider: model.provider, id: model.id, name: model.name || model.id, reasoning: model.reasoning ?? true,
+  } satisfies CatalogModel]));
+}
+
 export function scopedCandidates(ctx: ExtensionContext, settings: Settings) {
-  const available = new Map(ctx.modelRegistry.getAvailable().map(model => [modelId(model), model]));
+  const available = availableModels(ctx);
   const { tokens, defaultProvider } = loadPiEnabledModels();
-  const ids = resolveEnabledIds(tokens, available, defaultProvider);
+  const ids = expandEnabledIds(tokens, available, defaultProvider);
   return ids.map(id => {
-    const model = available.get(id);
-    const name = model?.name || id.split("/").pop() || id;
+    const model = available.get(id)!;
     const saved = settings.models[id];
-    return { id, name, reasoning: model?.reasoning ?? true, enabled: saved?.enabled ?? true,
-      description: (saved?.description?.trim() ? saved.description : defaultModelDescription(id, name, settings.locale)),
+    return { id, name: model.name, reasoning: model.reasoning, enabled: saved?.enabled ?? true,
+      description: (saved?.description?.trim() ? saved.description : defaultModelDescription(id, model.name, settings.locale)),
       current: ctx.model ? id === modelId(ctx.model) : false, scoped: tokens.length > 0 };
   });
 }
@@ -125,6 +129,7 @@ export default function jevRoute(pi: ExtensionAPI) {
   const snapshot = () => {
     const current = settings();
     return { settings: current, models: context ? scopedCandidates(context, current) : [],
+      catalog: context ? catalogEntries(availableModels(context).values()) : [],
       currentModel: context?.model ? modelId(context.model) : "", scopeMode: loadPiEnabledModels().tokens.length ? "enabledModels" : "none",
       keyAvailable, logs: store?.getLogs() ?? [], settingsError, coverage: COVERAGE,
       supervision: supervision?.snapshot() ?? { tasks: [], events: [], coverage: [] } };
@@ -141,7 +146,8 @@ export default function jevRoute(pi: ExtensionAPI) {
       const server = await startWeb(snapshot,
         (value, previous) => { ensureStore().saveSettings(parseSettings(value), previous); supervision?.settingsChanged(); },
         (id, value, previous) => { ensureStore().setNote(id, value, previous); },
-        300000, welcome, () => ensureStore().setMetadata("onboarding-complete", "yes"));
+        300000, welcome, () => ensureStore().setMetadata("onboarding-complete", "yes"),
+        model => { if (!context) throw new TypeError("会话尚未就绪"); return addEnabledModel(model, availableModels(context)); });
       if (operation !== lifetime) server.close(); else web = server;
     })();
     try { await attempt; } finally { if (opening === attempt) opening = undefined; }
