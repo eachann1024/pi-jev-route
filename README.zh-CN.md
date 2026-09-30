@@ -2,7 +2,9 @@
 
 [English](README.md) · 中文
 
-[![引导视频：三步，让子代理自动选模型](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/docs/media/guide-zh.webp)](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4)
+https://github.com/user-attachments/assets/79c12953-09ec-406e-9b0e-9ed3c8505737
+
+[观看引导视频（MP4，约 5 分钟）](https://github.com/eachann1024/pi-jev-route/blob/main/docs/media/pi-jev-route-guide-zh.mp4)
 
 ![Pi Jev Route — eligible subagent task → Jev selection → enabled model](https://raw.githubusercontent.com/eachann1024/pi-jev-route/main/web/assets/route-hero.png)
 
