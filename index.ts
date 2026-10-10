@@ -202,8 +202,11 @@ export default function jevRoute(pi: ExtensionAPI) {
 
   pi.on("before_agent_start", (event, ctx) => {
     context = ctx;
-    if (settingsError || !settings().enabled || !pi.getAllTools().some(tool => tool.name === "subagent")) return;
-    return { systemPrompt: event.systemPrompt + "\n\n" + ROUTING_PROMPT[settings().locale] };
+    if (settingsError) return;
+    const config = settings();
+    if (!config.enabled || !scopedCandidates(ctx, config).some(model => model.enabled)
+      || !pi.getAllTools().some(tool => tool.name === "subagent")) return;
+    return { systemPrompt: event.systemPrompt + "\n\n" + ROUTING_PROMPT[config.locale] };
   });
 
   pi.on("tool_call", async (event, ctx) => {
@@ -212,6 +215,9 @@ export default function jevRoute(pi: ExtensionAPI) {
     if (settingsError) return { block: true, reason: settingsError };
     const config = settings();
     if (!config.enabled) return;
+    const models = scopedCandidates(ctx, config);
+    // Without an enabled, available candidate, leave native dispatch entirely intact.
+    if (!models.some(model => model.enabled)) return;
     const text = copy(config.locale);
     const input = event.input;
     const id = randomUUID();
@@ -225,8 +231,7 @@ export default function jevRoute(pi: ExtensionAPI) {
       if (["workflow", "workflowScript", "workflowScriptPath", "tasks", "chain", "parallel"].some(key => input[key] !== undefined) || input.machine !== undefined) {
         record.reason = text.workflowSkip; log(); return;
       }
-      const models = scopedCandidates(ctx, config);
-      const allowedIds = models.filter(model => model.enabled && config.models[model.id]?.enabled !== false).map(model => model.id);
+      const allowedIds = models.filter(model => model.enabled).map(model => model.id);
       const { defaultProvider } = loadPiEnabledModels();
       let ignoredExplicit = "";
       if (typeof input.model === "string" && input.model.trim()) {
@@ -344,7 +349,10 @@ export default function jevRoute(pi: ExtensionAPI) {
         ctx.ui.notify(found.ambiguous ? "审计编号前缀有歧义，请提供更长前缀。" : found.log ? describeLog(found.log) : "未找到该审计记录。", "info"); return;
       }
       if (action === "status") {
-        ctx.ui.notify(settingsError || `Jev 子代理路由${settings().enabled ? "已启用" : "已关闭"}；主会话模型不变。${COVERAGE}`, "info"); return;
+        const config = settings();
+        const active = config.enabled && scopedCandidates(ctx, config).some(model => model.enabled);
+        const state = !config.enabled ? "已关闭" : active ? "已启用" : "未接管（没有启用的可用模型，使用原生子代理派发）";
+        ctx.ui.notify(settingsError || `Jev 子代理路由${state}；主会话模型不变。${COVERAGE}`, "info"); return;
       }
       if (action === "on" || action === "off") {
         try { const db = ensureStore(); db.saveSettings({ ...db.getSettings(), enabled: action === "on" }); invalidate(); ctx.ui.notify(`子代理路由已${action === "on" ? "开启" : "关闭"}；主会话模型未改变。`, "info"); }

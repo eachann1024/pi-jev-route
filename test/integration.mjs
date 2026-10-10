@@ -59,8 +59,31 @@ try {
   assert.match(scopedCandidates(ctx, db.getSettings())[0].description, /Lightweight model/i);
   ctx.scopedModels = [];
   assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(m => m.id), ['fixture/low', 'fixture/main']);
+  const assertNativeDispatch = async () => {
+    const before = { calls, logs: db.getLogs().length, entries: entries.length };
+    assert.equal(await emit('before_agent_start', { systemPrompt: 'original' }), undefined);
+    await commands.get('pi-jev-route-setting').handler('status', ctx);
+    assert.match(notices.at(-1), /未接管.*原生子代理派发/);
+    for (const model of [undefined, 'fixture/main:high', 'outside/model:low']) {
+      const input = { agent: 'undiscovered', task: 'Use native dispatch.', ...(model ? { model } : {}) };
+      const call = event(input);
+      const original = structuredClone(input);
+      assert.equal(await emit('tool_call', call), undefined);
+      assert.deepEqual(call.input, original);
+      assert.equal(await emit('tool_result', { toolName: 'subagent', toolCallId: call.toolCallId, input, content: [], isError: false, details: { asyncId: 'native-run' } }), undefined);
+    }
+    assert.deepEqual({ calls, logs: db.getLogs().length, entries: entries.length }, before);
+  };
   await writeEnabled([]);
   assert.equal(scopedCandidates(ctx, db.getSettings()).length, 0);
+  await assertNativeDispatch();
+  await writeEnabled(['unavailable/model']);
+  await assertNativeDispatch();
+  await writeEnabled(['low', 'main']);
+  const routingSettings = db.getSettings();
+  db.saveSettings({ ...routingSettings, models: { 'fixture/low': { enabled: false, description: '' }, 'fixture/main': { enabled: false, description: '' } } });
+  await assertNativeDispatch();
+  db.saveSettings(routingSettings);
   await writeEnabled(['fixture/*']);
   assert.deepEqual(scopedCandidates(ctx, db.getSettings()).map(model => model.id), ['fixture/low', 'fixture/main', 'fixture/other']);
   await writeEnabled(['low', 'main']);
