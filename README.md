@@ -12,7 +12,7 @@ pi install npm:@each1024/pi-jev-route
 
 Already using `pi-subagents`? Keep it; the extension uses its native launcher. Requires Node **22.18+** and Pi **0.85.1+**. After installation, run `/reload`. Routing is enabled by default. [简体中文](README.zh-CN.md)
 
-https://github.com/user-attachments/assets/7f6656ac-094e-48bc-b9a5-34f9de008631
+https://github.com/user-attachments/assets/0d24fb0a-7fe9-46b9-b279-f0272d98c4f4
 
 ## Get started
 
