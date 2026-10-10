@@ -16,9 +16,15 @@ https://github.com/user-attachments/assets/7f6656ac-094e-48bc-b9a5-34f9de008631
 
 ## Get started
 
-On first use in an interactive local Pi session, the extension opens its English welcome page in your browser. Choose **Open settings** to review the available models and routing options. To open the welcome page again, run `/pi-jev-route-setting welcome`.
+On first use in an interactive local Pi session, the extension opens its welcome page in your browser. Choose **Open settings** to configure available models, fallback policies, and task supervision. To open the welcome page again anytime, run `/pi-jev-route-setting welcome`.
 
-The `/pi-jev-route-setting` command opens the local settings and audit console. The first-run welcome flow also starts its loopback server to show the welcome page; installing the npm package alone does not open a browser. The server shuts down after inactivity and does not create a public listener or tunnel.
+The `/pi-jev-route-setting` command opens the local settings and audit console:
+
+- **Models & routing**: Enable models for subagent selection, choose fallback policies when routing confidence is low or offline, and set confidence thresholds.
+- **Task supervision**: Check long-running tasks for prolonged tool execution, repeated failures, or missing progress, then send feedback, corrective guidance, or attempt recovery according to your settings.
+- **History & audit**: Inspect decision reasons, duration, fallback sources, and audit event timelines for each subagent dispatch.
+
+The first-run welcome flow also starts a local loopback server to display the welcome page; installing the npm package alone does not open a browser. The server shuts down automatically after inactivity and never creates a public listener or tunnel.
 
 
 

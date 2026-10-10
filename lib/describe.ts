@@ -1,6 +1,6 @@
 import { LIGHT_MODEL_DESCRIPTION as LIGHT, ROUTING_PROMPT as PROMPTS, STRONG_MODEL_DESCRIPTION as STRONG, type Locale } from "./copy.ts";
 
-export const DESCRIPTION_PLACEHOLDER = "写何时选用。轻量（flash 等）：边界清楚、可逆的小改动与常规实现。强模型（gpt 6、sol、kimi k3、glm 5、opus、sonnet、fable、grok）：复杂架构、含糊需求或疑难排错。";
+export const DESCRIPTION_PLACEHOLDER = "简述模型适用场景。例如：轻量档适合文件检索、文本整理与局部小修改；强力档适合跨文件架构重构、复杂算法编写或排查未复现 bug。";
 export const LIGHT_MODEL_DESCRIPTION = LIGHT.zh;
 export const STRONG_MODEL_DESCRIPTION = STRONG.zh;
 export const ROUTING_PROMPT = PROMPTS.zh;
